@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "title": "Bản đồ AI trong 85 giây",
+  "duration_seconds": 85,
+  "narration": "Trí tuệ nhân tạo là lĩnh vực rộng, nơi máy thực hiện những công việc thường cần trí thông minh. Học máy là một cách xây dựng hệ thống trong lĩnh vực đó bằng cách học từ dữ liệu. AI tạo sinh tập trung vào việc tạo nội dung mới như văn bản, hình ảnh hoặc âm thanh. Mô hình ngôn ngữ lớn xử lý và tạo văn bản, nhưng ứng dụng trò chuyện chỉ là giao diện kết nối người dùng với một hay nhiều mô hình. Khi phân loại một công cụ, hãy nhìn vào dữ liệu đầu vào, cách xử lý và loại kết quả trả về.",
+  "scenes": [
+    {
+      "start": 0,
+      "end": 27,
+      "title": "AI là chiếc ô lớn",
+      "body": "Học máy là một cách làm bên trong lĩnh vực trí tuệ nhân tạo.",
+      "source_refs": ["data/studio-pack/c5-feedbackradar/video-mau/kich-ban-d1.md#2"]
+    },
+    {
+      "start": 27,
+      "end": 54,
+      "title": "Tạo sinh nói về kết quả",
+      "body": "Văn bản, hình ảnh và âm thanh mới là sản phẩm của hệ thống tạo sinh.",
+      "source_refs": ["data/studio-pack/c5-feedbackradar/video-mau/kich-ban-d1.md#3"]
+    },
+    {
+      "start": 54,
+      "end": 85,
+      "title": "Phân biệt bằng nhiệm vụ",
+      "body": "Hãy hỏi công cụ nhận gì, xử lý thế nào và trả về loại kết quả gì.",
+      "source_refs": ["data/studio-pack/c5-feedbackradar/video-mau/kich-ban-d1.md#4"]
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp1",
+      "time": 20,
+      "concept": "Quan hệ AI và học máy",
+      "question": "Phát biểu nào mô tả đúng quan hệ giữa AI và học máy?",
+      "explanation": "AI là lĩnh vực rộng; học máy là một cách xây dựng hệ thống AI bằng việc học từ dữ liệu.",
+      "source_refs": ["data/studio-pack/c5-feedbackradar/video-mau/kich-ban-d1.md#2"],
+      "options": [
+        {"id": "A", "text": "Học máy là một cách làm trong lĩnh vực AI", "is_correct": true, "misconception": null},
+        {"id": "B", "text": "AI và học máy là hai tên của cùng một khái niệm", "is_correct": false, "misconception": {"id": "same-scope", "label": "Đồng nhất AI với học máy"}},
+        {"id": "C", "text": "AI luôn phải học từ dữ liệu", "is_correct": false, "misconception": {"id": "data-only", "label": "Cho rằng mọi AI đều học từ dữ liệu"}},
+        {"id": "D", "text": "Học máy rộng hơn AI", "is_correct": false, "misconception": {"id": "reversed-scope", "label": "Đảo ngược quan hệ phạm vi"}}
+      ]
+    },
+    {
+      "id": "cp2",
+      "time": 45,
+      "concept": "AI tạo sinh",
+      "question": "Đặc điểm chính của một tác vụ AI tạo sinh là gì?",
+      "explanation": "Tác vụ tạo sinh tạo ra nội dung mới như văn bản, hình ảnh hoặc âm thanh.",
+      "source_refs": ["data/studio-pack/c5-feedbackradar/video-mau/kich-ban-d1.md#3"],
+      "options": [
+        {"id": "A", "text": "Tạo ra nội dung mới", "is_correct": true, "misconception": null},
+        {"id": "B", "text": "Chỉ phân loại dữ liệu có sẵn", "is_correct": false, "misconception": {"id": "classification", "label": "Nhầm tạo sinh với phân loại"}},
+        {"id": "C", "text": "Luôn trả về đáp án chính xác", "is_correct": false, "misconception": {"id": "perfect-output", "label": "Tin rằng AI luôn chính xác"}},
+        {"id": "D", "text": "Chỉ hoạt động với hình ảnh", "is_correct": false, "misconception": {"id": "image-only", "label": "Giới hạn tạo sinh vào hình ảnh"}}
+      ]
+    },
+    {
+      "id": "cp3",
+      "time": 70,
+      "concept": "Ứng dụng và mô hình",
+      "question": "Tên ứng dụng trò chuyện cho biết chắc điều gì?",
+      "explanation": "Tên ứng dụng không đủ để biết mô hình phía sau; cần xem đầu vào, cách xử lý và đầu ra.",
+      "source_refs": ["data/studio-pack/c5-feedbackradar/video-mau/kich-ban-d1.md#4"],
+      "options": [
+        {"id": "A", "text": "Chưa đủ để biết mô hình nào đang được dùng", "is_correct": true, "misconception": null},
+        {"id": "B", "text": "Ứng dụng luôn chỉ dùng một LLM", "is_correct": false, "misconception": {"id": "one-model", "label": "Đồng nhất ứng dụng với một mô hình"}},
+        {"id": "C", "text": "Ứng dụng chắc chắn là AI tạo sinh", "is_correct": false, "misconception": {"id": "app-is-task", "label": "Nhầm giao diện với loại tác vụ"}},
+        {"id": "D", "text": "Ứng dụng không thể gọi công cụ khác", "is_correct": false, "misconception": {"id": "no-tools", "label": "Bỏ qua khả năng kết nối công cụ"}}
+      ]
+    }
+  ]
+}

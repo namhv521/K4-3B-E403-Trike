@@ -1,0 +1,8 @@
+{
+  "text_model": "openrouter/free",
+  "transcription_model": "openai/whisper-1",
+  "tts_policy": "free-only",
+  "image_generation": {
+    "enabled": false
+  }
+}
