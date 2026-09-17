@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daily Knowledge Quest</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Inter, Arial, sans-serif;
+      background: #0b1020;
+      color: #f5f7ff;
+      min-height: 100vh;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      font: inherit;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 230px 1fr;
+      min-height: 100vh;
+    }
+
+    /* SIDEBAR */
+
+    .sidebar {
+      background: #11172b;
+      border-right: 1px solid #29314d;
+      padding: 24px 16px;
+    }
+
+    .logo {
+      font-size: 21px;
+      font-weight: 800;
+      margin-bottom: 36px;
+    }
+
+    .logo span {
+      color: #8b7cff;
+    }
+
+    .nav-item {
+      padding: 13px 14px;
+      margin-bottom: 8px;
+      border-radius: 10px;
+      color: #aeb7d3;
+      transition: 0.2s;
+    }
+
+    .nav-item:hover,
+    .nav-item.active {
+      background: #29234c;
+      color: white;
+    }
+
+    .profile {
+      margin-top: 40px;
+      padding: 14px;
+      background: #1a213a;
+      border-radius: 12px;
+    }
+
+    .profile-name {
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .profile-level {
+      font-size: 13px;
+      color: #aeb7d3;
+    }
+
+    .xp-bar {
+      height: 6px;
+      background: #343c5c;
+      border-radius: 10px;
+      margin-top: 12px;
+      overflow: hidden;
+    }
+
+    .xp-progress {
+      width: 68%;
+      height: 100%;
+      background: #8b7cff;
+    }
+
+    /* MAIN */
+
+    .main {
+      padding: 28px;
+      max-width: 1500px;
+      width: 100%;
+      margin: auto;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .eyebrow {
+      color: #8b7cff;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #aeb7d3;
+    }
+
+    .status {
+      padding: 8px 13px;
+      border-radius: 20px;
+      background: #233c35;
+      color: #73e6b4;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 270px;
+      gap: 24px;
+    }
+
+    /* VIDEO */
+
+    .video-card {
+      background: #151c32;
+      border: 1px solid #29314d;
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .video-screen {
+      height: 360px;
+      border-radius: 12px;
+      background:
+        radial-gradient(circle at 70% 30%, #443c80, transparent 30%),
+        linear-gradient(135deg, #1b2445, #25204b);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 30px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .video-label {
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      background: #ffffff18;
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+
+    .scene-number {
+      color: #b8afff;
+      font-size: 13px;
+      margin-bottom: 15px;
+    }
+
+    .video-screen h2 {
+      font-size: 32px;
+      margin-bottom: 14px;
+    }
+
+    .video-screen p {
+      max-width: 480px;
+      color: #c6cbea;
+      line-height: 1.6;
+    }
+
+    .concept-box {
+      margin-top: 22px;
+      padding: 12px 18px;
+      border: 1px solid #7468d6;
+      border-radius: 10px;
+      background: #7166d51c;
+      color: #dcd8ff;
+    }
+
+    .timeline-wrapper {
+      margin-top: 20px;
+    }
+
+    .time-row {
+      display: flex;
+      justify-content: space-between;
+      color: #aeb7d3;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .timeline {
+      position: relative;
+      height: 12px;
+      background: #343c5c;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+
+    .timeline-progress {
+      width: 0%;
+      height: 100%;
+      background: #8b7cff;
+      border-radius: 20px;
+      pointer-events: none;
+    }
+
+    .checkpoint {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 18px;
+      height: 18px;
+      background: #ffca68;
+      border: 3px solid #151c32;
+      border-radius: 50%;
+      z-index: 2;
+    }
+
+    .checkpoint.completed {
+      background: #70e4ad;
+    }
+
+    .checkpoint::after {
+      content: attr(data-label);
+      position: absolute;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      color: #aeb7d3;
+      white-space: nowrap;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 25px;
+    }
+
+    .control-btn {
+      background: #29314d;
+      color: white;
+      padding: 10px 14px;
+      border-radius: 8px;
+    }
+
+    .control-btn:hover {
+      background: #3a4569;
+    }
+
+    .control-btn.primary {
+      background: #786ce5;
+    }
+
+    .control-btn.primary:hover {
+      background: #9186f5;
+    }
+
+    .next-checkpoint {
+      margin-top: 22px;
+      padding: 14px;
+      background: #1c2540;
+      border-radius: 10px;
+      color: #bfc5e2;
+      font-size: 14px;
+    }
+
+    .next-checkpoint strong {
+      color: #ffca68;
+    }
+
+    /* RIGHT PANEL */
+
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .info-card {
+      background: #151c32;
+      border: 1px solid #29314d;
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .info-card h3 {
+      margin-bottom: 16px;
+      font-size: 16px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 11px 0;
+      border-bottom: 1px solid #29314d;
+      color: #aeb7d3;
+      font-size: 13px;
+    }
+
+    .info-row:last-child {
+      border-bottom: none;
+    }
+
+    .info-row strong {
+      color: white;
+    }
+
+    .concept-list {
+      list-style: none;
+    }
+
+    .concept-list li {
+      padding: 11px 0;
+      color: #bfc5e2;
+      font-size: 13px;
+      border-bottom: 1px solid #29314d;
+    }
+
+    .concept-list li:last-child {
+      border-bottom: none;
+    }
+
+    .concept-list li.done {
+      color: #70e4ad;
+    }
+
+    /* MODAL */
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: #050816cc;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 20;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal {
+      width: min(600px, 100%);
+      background: #151c32;
+      border: 1px solid #414b73;
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: 0 20px 80px #0008;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+      margin-bottom: 22px;
+    }
+
+    .modal-header h2 {
+      font-size: 22px;
+    }
+
+    .close-btn {
+      background: transparent;
+      color: #aeb7d3;
+      font-size: 24px;
+    }
+
+    .question-meta {
+      color: #8b7cff;
+      font-size: 13px;
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+
+    .question {
+      font-size: 20px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .answers {
+      display: grid;
+      gap: 12px;
+    }
+
+    .answer {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 15px;
+      background: #202943;
+      border: 1px solid #34405f;
+      border-radius: 10px;
+      color: white;
+      text-align: left;
+    }
+
+    .answer:hover {
+      border-color: #8b7cff;
+      background: #2c3455;
+    }
+
+    .answer.selected {
+      border-color: #8b7cff;
+      background: #403873;
+    }
+
+    .answer.correct {
+      border-color: #70e4ad;
+      background: #1e4a3b;
+    }
+
+    .answer.wrong {
+      border-color: #f28a8a;
+      background: #542e3b;
+    }
+
+    .answer-letter {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: #343c5c;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .feedback {
+      display: none;
+      margin-top: 18px;
+      padding: 15px;
+      border-radius: 10px;
+      background: #202943;
+      line-height: 1.6;
+      color: #cbd1ec;
+    }
+
+    .feedback.show {
+      display: block;
+    }
+
+    .feedback.success {
+      border: 1px solid #70e4ad;
+    }
+
+    .feedback.error {
+      border: 1px solid #f28a8a;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* RESPONSIVE */
+
+    @media (max-width: 1000px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .content {
+        grid-template-columns: 1fr;
+      }
+
+      .right-panel {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .main {
+        padding: 16px;
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .video-screen {
+        height: 280px;
+      }
+
+      .video-screen h2 {
+        font-size: 24px;
+      }
+
+      .right-panel {
+        display: flex;
+      }
+
+      .modal {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="logo">Learn<span>Quest</span></div>
+
+      <div class="nav-item active">▣ Dashboard</div>
+      <div class="nav-item">▤ My Learning</div>
+      <div class="nav-item">◈ Reflection</div>
+      <div class="nav-item">♛ Leaderboard</div>
+      <div class="nav-item">◉ Analytics</div>
+
+      <div class="profile">
+        <div class="profile-name">Alex Nguyen</div>
+        <div class="profile-level">Level 08 · 2,450 XP</div>
+        <div class="xp-bar">
+          <div class="xp-progress"></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">Daily Reflection Session</div>
+          <h1>Generative AI — Day 01</h1>
+          <p class="subtitle">
+            Xem lại kiến thức và hoàn thành các checkpoint.
+          </p>
+        </div>
+
+        <div class="status" id="sessionStatus">● IN PROGRESS</div>
+      </header>
+
+      <section class="content">
+
+        <!-- VIDEO AREA -->
+        <div class="video-card">
+
+          <div class="video-screen">
+            <div class="video-label">● RECAP VIDEO</div>
+
+            <div class="scene-number" id="sceneNumber">
+              SCENE 01 · INTRODUCTION
+            </div>
+
+            <h2 id="sceneTitle">Understanding Attention</h2>
+
+            <p id="sceneDescription">
+              Attention giúp mô hình tập trung vào những thông tin quan trọng
+              trong một chuỗi dữ liệu.
+            </p>
+
+            <div class="concept-box" id="conceptBox">
+              Key concept: Attention Mechanism
+            </div>
+          </div>
+
+          <!-- TIMELINE -->
+          <div class="timeline-wrapper">
+            <div class="time-row">
+              <span id="currentTimeLabel">00:00</span>
+              <span>05:00</span>
+            </div>
+
+            <div class="timeline" id="timeline">
+              <div class="timeline-progress" id="timelineProgress"></div>
+
+              <div
+                class="checkpoint"
+                style="left: 15%"
+                data-label="CP1 · 00:45"
+                data-time="45"
+                id="checkpoint-0">
+              </div>
+
+              <div
+                class="checkpoint"
+                style="left: 40%"
+                data-label="CP2 · 02:00"
+                data-time="120"
+                id="checkpoint-1">
+              </div>
+
+              <div
+                class="checkpoint"
+                style="left: 70%"
+                data-label="CP3 · 03:30"
+                data-time="210"
+                id="checkpoint-2">
+              </div>
+            </div>
+          </div>
+
+          <!-- CONTROLS -->
+          <div class="controls">
+            <button class="control-btn primary" id="playBtn">
+              ▶ Play
+            </button>
+
+            <button class="control-btn" id="backBtn">
+              ↶ -5s
+            </button>
+
+            <button class="control-btn" id="forwardBtn">
+              ↷ +10s
+            </button>
+
+            <button class="control-btn" id="restartBtn">
+              ↺ Restart
+            </button>
+          </div>
+
+          <div class="next-checkpoint">
+            <strong id="nextCheckpointText">NEXT CHECKPOINT: 00:45</strong>
+            <br />
+            <span id="nextCheckpointConcept">
+              Concept: Query, Key & Value
+            </span>
+          </div>
+
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <aside class="right-panel">
+
+          <div class="info-card">
+            <h3>Session Overview</h3>
+
+            <div class="info-row">
+              <span>Progress</span>
+              <strong id="progressText">0 / 3</strong>
+            </div>
+
+            <div class="info-row">
+              <span>Correct answers</span>
+              <strong id="correctText">0</strong>
+            </div>
+
+            <div class="info-row">
+              <span>XP earned</span>
+              <strong id="xpText">0 XP</strong>
+            </div>
+
+            <div class="info-row">
+              <span>Duration</span>
+              <strong>05:00</strong>
+            </div>
+          </div>
+
+          <div class="info-card">
+            <h3>Knowledge Map</h3>
+
+            <ul class="concept-list">
+              <li id="concept-0">○ Query, Key & Value</li>
+              <li id="concept-1">○ Attention Score</li>
+              <li id="concept-2">○ Ứng dụng của Attention</li>
+            </ul>
+          </div>
+
+        </aside>
+
+      </section>
+    </main>
+  </div>
+
+  <!-- QUIZ MODAL -->
+  <div class="modal-overlay" id="quizOverlay">
+    <div class="modal">
+
+      <div class="modal-header">
+        <div>
+          <div class="question-meta" id="questionMeta">
+            CHECKPOINT 01 · +100 XP
+          </div>
+          <h2>Knowledge Check</h2>
+        </div>
+
+        <button class="close-btn" id="closeQuizBtn">×</button>
+      </div>
+
+      <div class="question" id="questionText"></div>
+
+      <div class="answers" id="answersContainer"></div>
+
+      <div class="feedback" id="feedbackBox"></div>
+
+      <div class="modal-actions">
+        <button class="control-btn" id="retryBtn">
+          Thử lại
+        </button>
+
+        <button class="control-btn primary" id="submitBtn">
+          Xác nhận
+        </button>
+
+        <button class="control-btn primary hidden" id="continueBtn">
+          Tiếp tục video →
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- COMPLETION MODAL -->
+  <div class="modal-overlay" id="completionOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>🎉 Session Completed!</h2>
+      </div>
+
+      <div class="question">
+        Bạn đã hoàn thành Daily Knowledge Quest.
+      </div>
+
+      <div class="info-card">
+        <div class="info-row">
+          <span>Số câu đúng</span>
+          <strong id="finalCorrect">0 / 3</strong>
+        </div>
+
+        <div class="info-row">
+          <span>XP nhận được</span>
+          <strong id="finalXP">0 XP</strong>
+        </div>
+
+        <div class="info-row">
+          <span>Concept cần xem lại</span>
+          <strong id="reviewConcept">Không có</strong>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="control-btn primary" id="finishBtn">
+          Hoàn tất
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const VIDEO_DURATION = 300;
+
+    const checkpoints = [
+      {
+        time: 45,
+        concept: "Query, Key & Value",
+        question: "Trong Attention Mechanism, Query có vai trò gì?",
+        options: [
+          "Đại diện cho thông tin mà mô hình đang tìm kiếm",
+          "Lưu trữ toàn bộ kết quả cuối cùng",
+          "Xác định thời lượng của video",
+          "Loại bỏ tất cả thông tin không liên quan"
+        ],
+        correct: 0,
+        explanation:
+          "Query đại diện cho thông tin mà mô hình đang tìm kiếm và được dùng để so sánh với các Key.",
+        scene: {
+          number: "SCENE 02 · QUERY, KEY & VALUE",
+          title: "Query, Key & Value",
+          description:
+            "Query đại diện cho thông tin cần tìm. Key được dùng để so sánh, còn Value là thông tin được tổng hợp.",
+          concept: "Key concept: Query, Key & Value"
+        }
+      },
+      {
+        time: 120,
+        concept: "Attention Score",
+        question: "Attention Score thể hiện điều gì?",
+        options: [
+          "Thời lượng của một đoạn video",
+          "Mức độ liên quan giữa Query và Key",
+          "Số lượng slide trong bài học",
+          "Tốc độ phát video"
+        ],
+        correct: 1,
+        explanation:
+          "Attention Score thể hiện mức độ liên quan giữa Query và từng Key.",
+        scene: {
+          number: "SCENE 03 · ATTENTION SCORE",
+          title: "Attention Score",
+          description:
+            "Attention Score giúp mô hình xác định mức độ liên quan giữa Query và các Key khác nhau.",
+          concept: "Key concept: Attention Score"
+        }
+      },
+      {
+        time: 210,
+        concept: "Ứng dụng của Attention",
+        question: "Attention có thể hỗ trợ mô hình như thế nào?",
+        options: [
+          "Tập trung vào những thông tin quan trọng",
+          "Xóa toàn bộ dữ liệu đầu vào",
+          "Luôn tạo ra đáp án chính xác tuyệt đối",
+          "Thay thế hoàn toàn dữ liệu huấn luyện"
+        ],
+        correct: 0,
+        explanation:
+          "Attention giúp mô hình phân bổ mức độ tập trung cho các phần thông tin khác nhau.",
+        scene: {
+          number: "SCENE 04 · APPLICATION",
+          title: "Ứng dụng của Attention",
+          description:
+            "Attention giúp mô hình tập trung vào những phần thông tin có liên quan trong quá trình xử lý.",
+          concept: "Key concept: Ứng dụng của Attention"
+        }
+      }
+    ];
+
+    let currentTime = 0;
+    let isPlaying = false;
+    let timer = null;
+    let currentCheckpointIndex = -1;
+    let selectedAnswer = null;
+    let answered = false;
+    let correctCount = 0;
+    let xpEarned = 0;
+    let completedCheckpoints = new Set();
+    let reviewConcepts = [];
+
+    const playBtn = document.getElementById("playBtn");
+    const backBtn = document.getElementById("backBtn");
+    const forwardBtn = document.getElementById("forwardBtn");
+    const restartBtn = document.getElementById("restartBtn");
+
+    const timeline = document.getElementById("timeline");
+    const timelineProgress = document.getElementById("timelineProgress");
+    const currentTimeLabel = document.getElementById("currentTimeLabel");
+
+    const quizOverlay = document.getElementById("quizOverlay");
+    const completionOverlay = document.getElementById("completionOverlay");
+
+    const questionText = document.getElementById("questionText");
+    const answersContainer = document.getElementById("answersContainer");
+    const feedbackBox = document.getElementById("feedbackBox");
+
+    const submitBtn = document.getElementById("submitBtn");
+    const retryBtn = document.getElementById("retryBtn");
+    const continueBtn = document.getElementById("continueBtn");
+
+    function formatTime(seconds) {
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = Math.floor(seconds % 60);
+
+      return (
+        String(minutes).padStart(2, "0") +
+        ":" +
+        String(remainingSeconds).padStart(2, "0")
+      );
+    }
+
+    function updateTimeline() {
+      const percentage = (currentTime / VIDEO_DURATION) * 100;
+
+      timelineProgress.style.width = `${percentage}%`;
+      currentTimeLabel.textContent = formatTime(currentTime);
+
+      updateScene();
+      updateNextCheckpoint();
+    }
+
+    function updateScene() {
+      let scene = {
+        number: "SCENE 01 · INTRODUCTION",
+        title: "Understanding Attention",
+        description:
+          "Attention giúp mô hình tập trung vào những thông tin quan trọng trong một chuỗi dữ liệu.",
+        concept: "Key concept: Attention Mechanism"
+      };
+
+      for (const checkpoint of checkpoints) {
+        if (currentTime >= checkpoint.time) {
+          scene = checkpoint.scene;
+        }
+      }
+
+      document.getElementById("sceneNumber").textContent = scene.number;
+      document.getElementById("sceneTitle").textContent = scene.title;
+      document.getElementById("sceneDescription").textContent = scene.description;
+      document.getElementById("conceptBox").textContent = scene.concept;
+    }
+
+    function updateNextCheckpoint() {
+      const next = checkpoints.find(
+        (checkpoint, index) => !completedCheckpoints.has(index)
+      );
+
+      const nextText = document.getElementById("nextCheckpointText");
+      const nextConcept = document.getElementById("nextCheckpointConcept");
+
+      if (!next) {
+        nextText.textContent = "✓ TẤT CẢ CHECKPOINT ĐÃ HOÀN THÀNH";
+        nextConcept.textContent = "Bạn có thể xem lại video.";
+        return;
+      }
+
+      nextText.textContent =
+        `NEXT CHECKPOINT: ${formatTime(next.time)}`;
+
+      nextConcept.textContent = `Concept: ${next.concept}`;
+    }
+
+    function updateStats() {
+      document.getElementById("progressText").textContent =
+        `${completedCheckpoints.size} / ${checkpoints.length}`;
+
+      document.getElementById("correctText").textContent = correctCount;
+      document.getElementById("xpText").textContent = `${xpEarned} XP`;
+
+      checkpoints.forEach((checkpoint, index) => {
+        const marker = document.getElementById(`checkpoint-${index}`);
+        const concept = document.getElementById(`concept-${index}`);
+
+        if (completedCheckpoints.has(index)) {
+          marker.classList.add("completed");
+          concept.classList.add("done");
+          concept.textContent = `✓ ${checkpoint.concept}`;
+        }
+      });
+    }
+
+    function startPlaying() {
+      if (isPlaying || currentTime >= VIDEO_DURATION) return;
+
+      isPlaying = true;
+      playBtn.textContent = "⏸ Pause";
+
+      timer = setInterval(() => {
+        currentTime++;
+
+        if (currentTime >= VIDEO_DURATION) {
+          currentTime = VIDEO_DURATION;
+          stopPlaying();
+          finishSession();
+          return;
+        }
+
+        const nextIndex = checkpoints.findIndex(
+          (checkpoint, index) =>
+            !completedCheckpoints.has(index) &&
+            currentTime >= checkpoint.time
+        );
+
+        if (nextIndex !== -1) {
+          stopPlaying();
+          openQuiz(nextIndex);
+        }
+
+        updateTimeline();
+      }, 1000);
+    }
+
+    function stopPlaying() {
+      isPlaying = false;
+      clearInterval(timer);
+      timer = null;
+      playBtn.textContent = "▶ Play";
+    }
+
+    function togglePlaying() {
+      if (isPlaying) {
+        stopPlaying();
+      } else {
+        startPlaying();
+      }
+    }
+
+    function seekTo(time) {
+      currentTime = Math.max(0, Math.min(VIDEO_DURATION, time));
+      updateTimeline();
+    }
+
+    function openQuiz(index) {
+      currentCheckpointIndex = index;
+      selectedAnswer = null;
+      answered = false;
+
+      const checkpoint = checkpoints[index];
+
+      questionText.textContent = checkpoint.question;
+
+      document.getElementById("questionMeta").textContent =
+        `CHECKPOINT ${String(index + 1).padStart(2, "0")} · +100 XP`;
+
+      answersContainer.innerHTML = "";
+
+      checkpoint.options.forEach((option, optionIndex) => {
+        const button = document.createElement("button");
+        button.className = "answer";
+
+        button.innerHTML = `
+          <span class="answer-letter">
+            ${String.fromCharCode(65 + optionIndex)}
+          </span>
+          <span>${option}</span>
+        `;
+
+        button.addEventListener("click", () => {
+          if (answered) return;
+
+          selectedAnswer = optionIndex;
+
+          document.querySelectorAll(".answer").forEach((answer) => {
+            answer.classList.remove("selected");
+          });
+
+          button.classList.add("selected");
+        });
+
+        answersContainer.appendChild(button);
+      });
+
+      feedbackBox.className = "feedback";
+      feedbackBox.textContent = "";
+
+      submitBtn.classList.remove("hidden");
+      retryBtn.classList.add("hidden");
+      continueBtn.classList.add("hidden");
+
+      quizOverlay.classList.add("show");
+    }
+
+    function submitAnswer() {
+      if (selectedAnswer === null) {
+        feedbackBox.textContent = "Hãy chọn một đáp án trước khi xác nhận.";
+        feedbackBox.className = "feedback show error";
+        return;
+      }
+
+      if (answered) return;
+
+      answered = true;
+
+      const checkpoint = checkpoints[currentCheckpointIndex];
+      const answerButtons = document.querySelectorAll(".answer");
+
+      answerButtons.forEach((button, index) => {
+        if (index === checkpoint.correct) {
+          button.classList.add("correct");
+        }
+
+        if (
+          index === selectedAnswer &&
+          selectedAnswer !== checkpoint.correct
+        ) {
+          button.classList.add("wrong");
+        }
+      });
+
+      if (selectedAnswer === checkpoint.correct) {
+        correctCount++;
+        xpEarned += 100;
+        completedCheckpoints.add(currentCheckpointIndex);
+
+        feedbackBox.textContent =
+          `✓ Chính xác! ${checkpoint.explanation}`;
+
+        feedbackBox.className = "feedback show success";
+      } else {
+        reviewConcepts.push(checkpoint.concept);
+
+        feedbackBox.textContent =
+          `✗ Chưa chính xác. ${checkpoint.explanation}`;
+
+        feedbackBox.className = "feedback show error";
+      }
+
+      updateStats();
+
+      submitBtn.classList.add("hidden");
+      retryBtn.classList.remove("hidden");
+      continueBtn.classList.remove("hidden");
+    }
+
+    function retryQuestion() {
+      selectedAnswer = null;
+      answered = false;
+
+      document.querySelectorAll(".answer").forEach((button) => {
+        button.classList.remove("selected", "correct", "wrong");
+      });
+
+      feedbackBox.className = "feedback";
+      feedbackBox.textContent = "";
+
+      submitBtn.classList.remove("hidden");
+      retryBtn.classList.add("hidden");
+      continueBtn.classList.add("hidden");
+    }
+
+    function continueVideo() {
+      quizOverlay.classList.remove("show");
+
+      if (!completedCheckpoints.has(currentCheckpointIndex)) {
+        completedCheckpoints.add(currentCheckpointIndex);
+      }
+
+      updateStats();
+
+      const nextCheckpoint = checkpoints.find(
+        (checkpoint, index) =>
+          !completedCheckpoints.has(index) &&
+          checkpoint.time > currentTime
+      );
+
+      if (nextCheckpoint) {
+        startPlaying();
+      } else {
+        finishSession();
+      }
+    }
+
+    function finishSession() {
+      stopPlaying();
+
+      document.getElementById("sessionStatus").textContent =
+        "✓ COMPLETED";
+
+      document.getElementById("finalCorrect").textContent =
+        `${correctCount} / ${checkpoints.length}`;
+
+      document.getElementById("finalXP").textContent =
+        `${xpEarned} XP`;
+
+      document.getElementById("reviewConcept").textContent =
+        reviewConcepts.length
+          ? [...new Set(reviewConcepts)].join(", ")
+          : "Không có";
+
+      completionOverlay.classList.add("show");
+    }
+
+    playBtn.addEventListener("click", togglePlaying);
+
+    backBtn.addEventListener("click", () => {
+      stopPlaying();
+      seekTo(currentTime - 5);
+    });
+
+    forwardBtn.addEventListener("click", () => {
+      stopPlaying();
+      seekTo(currentTime + 10);
+    });
+
+    restartBtn.addEventListener("click", () => {
+      stopPlaying();
+
+      currentTime = 0;
+      currentCheckpointIndex = -1;
+      selectedAnswer = null;
+      answered = false;
+      correctCount = 0;
+      xpEarned = 0;
+      completedCheckpoints.clear();
+      reviewConcepts = [];
+
+      document.getElementById("sessionStatus").textContent =
+        "● IN PROGRESS";
+
+      document.querySelectorAll(".checkpoint").forEach((marker) => {
+        marker.classList.remove("completed");
+      });
+
+      document.querySelectorAll(".concept-list li").forEach((item, index) => {
+        item.classList.remove("done");
+        item.textContent = `○ ${checkpoints[index].concept}`;
+      });
+
+      updateTimeline();
+      updateStats();
+    });
+
+    timeline.addEventListener("click", (event) => {
+      const rect = timeline.getBoundingClientRect();
+      const percentage = (event.clientX - rect.left) / rect.width;
+
+      stopPlaying();
+      seekTo(percentage * VIDEO_DURATION);
+    });
+
+    submitBtn.addEventListener("click", submitAnswer);
+    retryBtn.addEventListener("click", retryQuestion);
+    continueBtn.addEventListener("click", continueVideo);
+
+    document.getElementById("closeQuizBtn").addEventListener("click", () => {
+      quizOverlay.classList.remove("show");
+    });
+
+    document.getElementById("finishBtn").addEventListener("click", () => {
+      completionOverlay.classList.remove("show");
+    });
+
+    updateTimeline();
+    updateStats();
+  </script>
+</body>
+</html>
