@@ -9,9 +9,9 @@
 | Họ và Tên | Mã Học Viên | Vai trò chính | Phần việc đảm nhiệm trong dự án |
 |---|---|---|---|
 |Hoàng Văn Nam|2A202602853|Technical Lead|prototype web + video interactive, AI call thật + logic A/B/C/D, đúng → skip 10s, sai → skip 5s  |
-|Nguyễn Hải Hoàng|2A202602489||logging + leaderboard + user test, feedback log + golden set + demo và tổng hợp kết quả.|
-|Lê Tuấn Đạt|2A202602623| JTBD/spec | JTBD/spec + thiết kế logic AI, prompt + tiêu chí kiểm tra câu hỏi/đáp án có đủ căn cứ từ bài học |
-|Nguyễn Danh Gia Minh|2A202602441|  | prototype web + video interactive|mining evidence, phỏng vấn user + bảng đếm pain point + mã hội thoại |
+|Nguyễn Hải Hoàng|2A202602489|Data & Evidence Lead|logging + leaderboard + user test, feedback log + golden set + demo và tổng hợp kết quả.|
+|Lê Tuấn Đạt|2A202602623|Product Lead / JTBD|JTBD/spec + thiết kế logic AI, prompt + tiêu chí kiểm tra câu hỏi/đáp án có đủ căn cứ từ bài học|
+|Nguyễn Danh Gia Minh|2A202602441|User Research / Mom Test|prototype web + video interactive; mining evidence, phỏng vấn user + bảng đếm pain point + mã hội thoại|
 
 > Nhóm copy nguyên file README này về repo của mình, rồi điền bảng trên. Cột **Phần việc đảm nhiệm** ghi càng cụ thể càng tốt.
 
