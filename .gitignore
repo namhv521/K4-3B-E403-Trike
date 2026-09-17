@@ -1,6 +1,16 @@
+# Local files and source materials outside the submission package.
 .DS_Store
 __pycache__/
 .env
 node_modules/
 
 data/
+examples/
+further-reading/
+tracks/
+01-challenge-brief.md
+02-guide.md
+03-ai-spec-template.md
+04-rubric.md
+canvas.md
+/README.md
