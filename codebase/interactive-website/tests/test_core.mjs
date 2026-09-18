@@ -66,3 +66,42 @@ test("a learner may delete local session telemetry", () => {
   session.clearEvents();
   assert.equal(session.events.length, 0);
 });
+
+test("session summary reports end-of-video learning metrics", () => {
+  let now = 1_000;
+  const session = new LearningSession(validateLesson(lesson()), { sessionId: "s1", now: () => now });
+  session.openDueCheckpoint(20);
+  now += 2_000;
+  session.submitAnswer("B");
+  now += 5_000;
+  session.resolveFeedback("edit");
+  now += 1_000;
+  session.submitAnswer("A");
+
+  assert.deepEqual(session.summary(), {
+    score: 0,
+    first_attempt_correct: 0,
+    first_attempt_accuracy: 0,
+    answered_checkpoints: 1,
+    total_checkpoints: 1,
+    total_attempts: 2,
+    average_response_time_ms: 1500,
+  });
+});
+
+test("completion metrics flag a learner who finishes below half of video duration", () => {
+  const session = new LearningSession(validateLesson(lesson()), { sessionId: "s1" });
+
+  assert.deepEqual(session.completion(29), {
+    completion_seconds: 29,
+    duration_seconds: 60,
+    watched_ratio: 48,
+    needs_review: true,
+  });
+  assert.deepEqual(session.completion(30), {
+    completion_seconds: 30,
+    duration_seconds: 60,
+    watched_ratio: 50,
+    needs_review: false,
+  });
+});

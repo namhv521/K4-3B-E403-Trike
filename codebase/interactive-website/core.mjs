@@ -3,6 +3,9 @@ export const ALLOWED_EVENT_FIELDS = new Set([
   "attempt_number", "selected_answer", "is_correct", "misconception_id",
   "misconception_label", "action_after_feedback", "response_time_ms", "score",
   "input_type", "input_value", "seek_from", "seek_to",
+  "first_attempt_accuracy", "answered_checkpoints", "total_checkpoints",
+  "total_attempts", "average_response_time_ms",
+  "completion_seconds", "duration_seconds", "watched_ratio", "needs_review",
 ]);
 
 const EPSILON = 0.001;
@@ -131,6 +134,33 @@ export class LearningSession {
   score() {
     const correct = [...this.firstAttemptResults.values()].filter(Boolean).length;
     return Math.round((correct / this.lesson.checkpoints.length) * 100) / 10;
+  }
+
+  summary() {
+    const attempts = [...this.attempts.values()].flat();
+    const answered = this.firstAttemptResults.size;
+    const correct = [...this.firstAttemptResults.values()].filter(Boolean).length;
+    const responseTotal = attempts.reduce((total, attempt) => total + attempt.response_time_ms, 0);
+    return {
+      score: this.score(),
+      first_attempt_correct: correct,
+      first_attempt_accuracy: answered ? Math.round((correct / answered) * 100) : 0,
+      answered_checkpoints: answered,
+      total_checkpoints: this.lesson.checkpoints.length,
+      total_attempts: attempts.length,
+      average_response_time_ms: attempts.length ? Math.round(responseTotal / attempts.length) : 0,
+    };
+  }
+
+  completion(elapsedSeconds) {
+    const completionSeconds = Math.max(0, Math.round(Number(elapsedSeconds) || 0));
+    const duration = this.lesson.duration_seconds;
+    return {
+      completion_seconds: completionSeconds,
+      duration_seconds: duration,
+      watched_ratio: Math.round((completionSeconds / duration) * 100),
+      needs_review: completionSeconds < duration / 2,
+    };
   }
 
   event(type, details = {}) {

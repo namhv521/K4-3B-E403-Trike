@@ -42,6 +42,13 @@ function renderSources(checkpoint, sources) {
   });
 }
 
+function formatElapsed(seconds) {
+  const rounded = Math.max(0, Math.round(seconds));
+  const minute = Math.floor(rounded / 60);
+  const second = rounded % 60;
+  return minute ? `${minute} phút ${second} giây` : `${second} giây`;
+}
+
 function eventMessage(event) {
   const labels = {
     keyboard_input: `Bấm phím ${event.input_value}`,
@@ -53,6 +60,7 @@ function eventMessage(event) {
     answer_submitted: `Chọn đáp án ${event.selected_answer}`,
     hint_requested: `Yêu cầu gợi ý tại ${event.checkpoint_id}`,
     feedback_action: `Chọn ${event.action_after_feedback}`,
+    session_completed: `Hoàn thành video: ${event.score}/10 điểm`,
   };
   return labels[event.event] || event.event;
 }
@@ -74,6 +82,7 @@ function initialise(lesson, sources) {
   const logList = $("#log-list");
   const logEmpty = $("#log-empty");
   const logCount = $("#log-count");
+  const resultOverlay = $("#result-overlay");
   const session = new LearningSession(lesson, { sessionId: sessionId() });
   let displayedCheckpoint = null;
   let feedbackTimer = null;
@@ -81,6 +90,8 @@ function initialise(lesson, sources) {
   let previousVideoTime = 0;
   let programmaticSeekTarget = null;
   let recentInputType = "mouse";
+  let resultShown = false;
+  let startedAt = null;
   const background = document.querySelectorAll(".lesson-header, .lesson-intro, .learning-notes, .privacy-note, #lesson-video");
 
   document.title = `${lesson.title} · VLearn`;
@@ -168,7 +179,15 @@ function initialise(lesson, sources) {
   const answer = (optionId) => {
     const result = session.submitAnswer(optionId);
     log();
-    options.querySelectorAll("button").forEach((button) => { button.disabled = true; });
+    options.querySelectorAll("button").forEach((button) => {
+      const option = result.checkpoint.options.find((item) => item.id === button.dataset.option);
+      const selected = button.dataset.option === result.attempt.selected_answer;
+      button.disabled = true;
+      button.classList.toggle("is-correct", option?.is_correct === true);
+      button.classList.toggle("is-incorrect", selected && option?.is_correct !== true);
+      button.classList.toggle("is-selected", selected);
+      button.setAttribute("aria-label", `${button.textContent}: ${option?.is_correct ? "đáp án đúng" : selected ? "đáp án đã chọn, chưa đúng" : "đáp án chưa đúng"}`);
+    });
     feedback.hidden = false;
     feedback.dataset.kind = result.kind;
     continueButton.hidden = false;
@@ -197,7 +216,11 @@ function initialise(lesson, sources) {
     log();
     if (action === "edit") {
       feedback.hidden = true;
-      options.querySelectorAll("button").forEach((button) => { button.disabled = false; });
+      options.querySelectorAll("button").forEach((button) => {
+        button.disabled = false;
+        button.classList.remove("is-correct", "is-incorrect", "is-selected");
+        button.removeAttribute("aria-label");
+      });
       setStatus("Bạn có thể chọn lại câu trả lời. Video vẫn giữ tại checkpoint.");
       return;
     }
@@ -250,6 +273,7 @@ function initialise(lesson, sources) {
   });
   video.addEventListener("seeked", () => { previousVideoTime = video.currentTime; });
   video.addEventListener("play", () => {
+    startedAt ??= Date.now();
     record("video_play", { input_type: "media", input_value: "play", video_time: video.currentTime });
     scheduleFrameCheck();
   });
@@ -257,6 +281,26 @@ function initialise(lesson, sources) {
     record("video_pause", { input_type: "media", input_value: "pause", video_time: video.currentTime });
     if (videoFrameHandle && typeof video.cancelVideoFrameCallback === "function") video.cancelVideoFrameCallback(videoFrameHandle);
     videoFrameHandle = null;
+  });
+  video.addEventListener("ended", () => {
+    if (resultShown) return;
+    resultShown = true;
+    const summary = session.summary();
+    const completion = session.completion(startedAt === null ? 0 : (Date.now() - startedAt) / 1000);
+    record("session_completed", { ...summary, ...completion, video_time: video.duration });
+    $("#result-score").textContent = `${summary.score}/10`;
+    $("#result-accuracy").textContent = `${summary.first_attempt_accuracy}%`;
+    $("#result-checkpoints").textContent = `${summary.answered_checkpoints}/${summary.total_checkpoints}`;
+    $("#result-attempts").textContent = String(summary.total_attempts);
+    $("#result-response-time").textContent = `${(summary.average_response_time_ms / 1000).toFixed(1)} giây`;
+    $("#result-completion-time").textContent = `Thời gian hoàn thành: ${formatElapsed(completion.completion_seconds)} / video ${formatElapsed(completion.duration_seconds)} (${completion.watched_ratio}%)`;
+    const assessment = $("#result-viewing-assessment");
+    assessment.classList.toggle("needs-review", completion.needs_review);
+    assessment.textContent = completion.needs_review
+      ? "Cần xem lại: bạn hoàn thành quá nhanh, có khả năng đã tua nội dung. Hãy ôn lại các checkpoint và kỹ năng cần củng cố."
+      : "Thời gian học phù hợp với thời lượng video.";
+    resultOverlay.hidden = false;
+    setStatus(`Đã hoàn thành video với ${summary.score}/10 điểm.`);
   });
   video.addEventListener("error", () => setStatus("Không phát được video. Kiểm tra bundle recap.mp4."));
 
