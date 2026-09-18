@@ -21,8 +21,16 @@ async function loadAnalytics(bundleId) {
   $("#metric-views").textContent = report.views;
   $("#metric-completed").textContent = report.completed_sessions;
   $("#metric-fast").textContent = report.fast_completion_count;
+  $("#metric-response-time").textContent = `${(report.average_response_time_ms / 1000).toFixed(1)} giây`;
+  $("#metric-completion-time").textContent = `${report.average_completion_seconds} giây`;
   renderRows("#checkpoint-analytics", report.checkpoints, (row) => `${row.checkpoint_id}: ${row.first_attempt_accuracy}% đúng lần đầu · ${row.incorrect} lượt sai`, "Chưa có câu trả lời.");
   renderRows("#misconception-analytics", report.misconceptions, (row) => `${row.label || row.misconception_id}: ${row.count} lần`, "Chưa ghi nhận nhầm lẫn.");
+  renderRows("#session-analytics", report.sessions, (row) => `${row.session_id.slice(0, 8)}… · ${row.event_count} event · ${row.completed ? "đã hoàn thành" : "đang xem"}`, "Chưa có phiên xem.");
+  renderRows("#event-analytics", report.recent_events, (row) => {
+    const checkpoint = row.checkpoint_id ? ` · ${row.checkpoint_id}` : "";
+    const answer = typeof row.is_correct === "boolean" ? ` · ${row.is_correct ? "đúng" : "sai"}` : "";
+    return `${new Date(row.timestamp).toLocaleTimeString("vi-VN", {hour12: false})} · ${row.session_id.slice(0, 8)}… · ${row.event}${checkpoint}${answer}`;
+  }, "Chưa có hoạt động.");
 }
 
 async function pollJob(jobId) {

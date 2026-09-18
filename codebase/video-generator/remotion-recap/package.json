@@ -1,7 +1,7 @@
 {
   "name": "vlearn-remotion-recap",
   "private": true,
-  "scripts": {"studio": "remotion studio", "render": "remotion render VLearnRecap"},
+  "scripts": {"studio": "remotion studio", "render": "remotion render VLearnRecap", "typecheck": "tsc --noEmit"},
   "dependencies": {
     "@remotion/cli": "4.0.407",
     "@remotion/zod-types": "4.0.407",

@@ -106,6 +106,9 @@ function initialise(lesson, sources) {
     generationNotice.textContent = "Bản demo mock: nội dung fixture, không gọi OpenRouter.";
     generationNotice.hidden = false;
   }
+  if (bundleId) {
+    $("#privacy-note").textContent = "Bundle này gửi event allowlist ẩn danh đến dashboard local của Admin; không gửi nội dung nguồn, dữ liệu nhập tự do hay định danh người học.";
+  }
   video.src = bundle.video;
 
   const renderEvents = () => {
