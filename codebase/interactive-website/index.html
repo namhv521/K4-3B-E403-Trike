@@ -58,7 +58,20 @@
           <button id="clear-log" class="text-button" type="button">Xóa log trong tab</button>
         </div>
       </section>
-      <p class="privacy-note">Log chỉ gồm thao tác checkpoint trong phiên hiện tại và chỉ được tải xuống khi bạn chọn “Tải log”. Trang này không tự gửi log đến máy chủ.</p>
+      <section class="interaction-log" aria-labelledby="interaction-log-title">
+        <div class="interaction-log-header">
+          <div>
+            <h2 id="interaction-log-title">Log thao tác trực tiếp</h2>
+            <p>Bàn phím, chuột, phát/dừng và tua video trong phiên này.</p>
+          </div>
+          <output id="log-count" aria-label="Số sự kiện">0 sự kiện</output>
+        </div>
+        <div id="live-log" class="log-stream" role="log" aria-live="polite" aria-relevant="additions">
+          <p id="log-empty" class="log-empty">Chưa có thao tác.</p>
+          <ol id="log-list"></ol>
+        </div>
+      </section>
+      <p class="privacy-note">Log chỉ gồm thao tác bàn phím, chuột, video và checkpoint trong phiên hiện tại; không ghi nội dung nguồn hoặc dữ liệu nhập tự do. Trang này không tự gửi log đến máy chủ.</p>
     </main>
     <script type="module" src="./app.js"></script>
   </body>

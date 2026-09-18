@@ -6,6 +6,10 @@ tab hiện tại. Khi trả lời sai, lời giải được giữ trên màn h�
 khi mở các lựa chọn xem lại, sửa đáp án hoặc tiếp tục. Không có backend, không
 tự gửi log và không phân phối `.exe`.
 
+Bảng **Log thao tác trực tiếp** bên dưới video hiển thị ngay các phím đã bấm,
+click trên control, play/pause, thao tác tua và các event checkpoint. Log không
+ghi nội dung nguồn hoặc dữ liệu nhập tự do.
+
 Repository có kèm một bundle fixture mock để kiểm tra luồng web ngay. Banner trên
 trang sẽ ghi rõ đây là mock; thay bằng bundle sinh từ học liệu trước khi demo/nộp.
 

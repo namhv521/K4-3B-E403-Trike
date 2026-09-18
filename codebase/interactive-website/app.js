@@ -42,6 +42,21 @@ function renderSources(checkpoint, sources) {
   });
 }
 
+function eventMessage(event) {
+  const labels = {
+    keyboard_input: `Bấm phím ${event.input_value}`,
+    pointer_input: `Nhấp chuột: ${event.input_value}`,
+    video_play: `Phát video tại ${formatTime(event.video_time || 0)}`,
+    video_pause: `Dừng video tại ${formatTime(event.video_time || 0)}`,
+    video_seek: `Tua video ${formatTime(event.seek_from || 0)} → ${formatTime(event.seek_to || 0)}`,
+    checkpoint_opened: `Mở checkpoint ${event.checkpoint_id}`,
+    answer_submitted: `Chọn đáp án ${event.selected_answer}`,
+    hint_requested: `Yêu cầu gợi ý tại ${event.checkpoint_id}`,
+    feedback_action: `Chọn ${event.action_after_feedback}`,
+  };
+  return labels[event.event] || event.event;
+}
+
 function initialise(lesson, sources) {
   const video = $("#lesson-video");
   const overlay = $("#checkpoint-overlay");
@@ -56,9 +71,16 @@ function initialise(lesson, sources) {
   const hintButton = $("#hint-button");
   const sourceButton = $("#source-button");
   const sourcePanel = $("#source-panel");
+  const logList = $("#log-list");
+  const logEmpty = $("#log-empty");
+  const logCount = $("#log-count");
   const session = new LearningSession(lesson, { sessionId: sessionId() });
   let displayedCheckpoint = null;
   let feedbackTimer = null;
+  let renderedEvents = 0;
+  let previousVideoTime = 0;
+  let programmaticSeekTarget = null;
+  let recentInputType = "mouse";
   const background = document.querySelectorAll(".lesson-header, .lesson-intro, .learning-notes, .privacy-note, #lesson-video");
 
   document.title = `${lesson.title} · VLearn`;
@@ -71,8 +93,37 @@ function initialise(lesson, sources) {
   }
   video.src = bundle.video;
 
-  const persist = () => sessionStorage.setItem(telemetryKey, JSON.stringify(session.events));
-  const log = () => persist();
+  const renderEvents = () => {
+    while (renderedEvents < session.events.length) {
+      const event = session.events[renderedEvents];
+      const row = document.createElement("li");
+      row.className = "log-entry";
+      const time = document.createElement("time");
+      time.className = "log-time";
+      time.dateTime = event.timestamp;
+      time.textContent = new Date(event.timestamp).toLocaleTimeString("vi-VN", { hour12: false });
+      const message = document.createElement("span");
+      message.className = "log-message";
+      message.textContent = eventMessage(event);
+      row.append(time, message);
+      logList.prepend(row);
+      renderedEvents += 1;
+    }
+    logEmpty.hidden = session.events.length > 0;
+    logCount.textContent = `${session.events.length} sự kiện`;
+  };
+  const log = () => {
+    sessionStorage.setItem(telemetryKey, JSON.stringify(session.events));
+    renderEvents();
+  };
+  const record = (event, details = {}) => {
+    session.event(event, details);
+    log();
+  };
+  const seekTo = (time) => {
+    programmaticSeekTarget = time;
+    video.currentTime = time;
+  };
   const setStatus = (text) => { status.textContent = text; };
   const hideOverlay = () => {
     if (feedbackTimer) clearTimeout(feedbackTimer);
@@ -89,7 +140,7 @@ function initialise(lesson, sources) {
   const openCheckpoint = (checkpoint) => {
     displayedCheckpoint = checkpoint;
     video.pause();
-    video.currentTime = checkpoint.time;
+    seekTo(checkpoint.time);
     question.textContent = checkpoint.question;
     options.replaceChildren();
     checkpoint.options.forEach((option) => {
@@ -151,7 +202,7 @@ function initialise(lesson, sources) {
       return;
     }
     hideOverlay();
-    video.currentTime = result.time;
+    seekTo(result.time);
     video.play().catch(() => setStatus("Chọn nút phát để tiếp tục video."));
     setStatus(action === "review" ? "Đang xem lại 5 giây trước checkpoint." : "Đang tiếp tục bài học.");
   };
@@ -181,10 +232,29 @@ function initialise(lesson, sources) {
     mediaVerified = true;
     setStatus("Sẵn sàng. Video chỉ dùng cho luyện tập; không phải bài chấm điểm.");
   });
-  video.addEventListener("timeupdate", checkTiming);
-  video.addEventListener("seeking", checkTiming);
-  video.addEventListener("play", scheduleFrameCheck);
+  video.addEventListener("timeupdate", () => {
+    checkTiming();
+    if (!video.seeking) previousVideoTime = video.currentTime;
+  });
+  video.addEventListener("seeking", () => {
+    checkTiming();
+    if (programmaticSeekTarget !== null && Math.abs(video.currentTime - programmaticSeekTarget) < 0.25) {
+      programmaticSeekTarget = null;
+      return;
+    }
+    programmaticSeekTarget = null;
+    record("video_seek", {
+      input_type: recentInputType, input_value: "timeline",
+      video_time: video.currentTime, seek_from: previousVideoTime, seek_to: video.currentTime,
+    });
+  });
+  video.addEventListener("seeked", () => { previousVideoTime = video.currentTime; });
+  video.addEventListener("play", () => {
+    record("video_play", { input_type: "media", input_value: "play", video_time: video.currentTime });
+    scheduleFrameCheck();
+  });
   video.addEventListener("pause", () => {
+    record("video_pause", { input_type: "media", input_value: "pause", video_time: video.currentTime });
     if (videoFrameHandle && typeof video.cancelVideoFrameCallback === "function") video.cancelVideoFrameCallback(videoFrameHandle);
     videoFrameHandle = null;
   });
@@ -207,10 +277,36 @@ function initialise(lesson, sources) {
     sourcePanel.hidden = !sourcePanel.hidden;
     sourceButton.setAttribute("aria-expanded", String(!sourcePanel.hidden));
   });
+  document.addEventListener("keydown", (event) => {
+    const target = event.target;
+    if (event.repeat || event.ctrlKey || event.metaKey || event.altKey || target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target?.isContentEditable) return;
+    const key = event.key === " " ? "Space" : event.key;
+    recentInputType = "keyboard";
+    if (!["Shift", "Control", "Alt", "Meta"].includes(key)) {
+      record("keyboard_input", { input_type: "keyboard", input_value: key, video_time: video.currentTime });
+    }
+    const answerKey = key.toUpperCase();
+    const answerButton = options.querySelector(`[data-option="${answerKey}"]`);
+    if (session.activeCheckpointId && feedback.hidden && answerButton && !answerButton.disabled) {
+      event.preventDefault();
+      answer(answerKey);
+    }
+  });
+  document.addEventListener("pointerdown", () => { recentInputType = "mouse"; }, true);
+  document.addEventListener("click", (event) => {
+    if (!(event.target instanceof Element)) return;
+    const control = event.target.closest("button, a, video");
+    if (!control) return;
+    const value = control.dataset.option ? `answer:${control.dataset.option}` : control.id || control.tagName.toLowerCase();
+    record("pointer_input", { input_type: "mouse", input_value: value, video_time: video.currentTime });
+  }, true);
   $("#export-log").addEventListener("click", () => exportEvents(session.events));
   $("#clear-log").addEventListener("click", () => {
     session.clearEvents();
     sessionStorage.removeItem(telemetryKey);
+    logList.replaceChildren();
+    renderedEvents = 0;
+    renderEvents();
     setStatus("Đã xóa log lưu trong tab này.");
   });
 }

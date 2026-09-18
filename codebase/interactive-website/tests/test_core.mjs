@@ -49,8 +49,15 @@ test("session pauses at due checkpoint and keeps incorrect learner in control", 
 });
 
 test("telemetry removes secrets and free-text fields", () => {
-  const event = allowlistedEvent({ session_id: "s1", timestamp: "2026-09-18T00:00:00Z", event: "answer_submitted", selected_answer: "B", api_key: "secret", source_text: "private" });
-  assert.deepEqual(event, { session_id: "s1", timestamp: "2026-09-18T00:00:00Z", event: "answer_submitted", selected_answer: "B" });
+  const event = allowlistedEvent({
+    session_id: "s1", timestamp: "2026-09-18T00:00:00Z", event: "video_seek",
+    input_type: "mouse", input_value: "timeline", seek_from: 12.5, seek_to: 30,
+    api_key: "secret", source_text: "private",
+  });
+  assert.deepEqual(event, {
+    session_id: "s1", timestamp: "2026-09-18T00:00:00Z", event: "video_seek",
+    input_type: "mouse", input_value: "timeline", seek_from: 12.5, seek_to: 30,
+  });
 });
 
 test("a learner may delete local session telemetry", () => {

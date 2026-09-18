@@ -2,6 +2,7 @@ export const ALLOWED_EVENT_FIELDS = new Set([
   "session_id", "timestamp", "event", "video_time", "checkpoint_id",
   "attempt_number", "selected_answer", "is_correct", "misconception_id",
   "misconception_label", "action_after_feedback", "response_time_ms", "score",
+  "input_type", "input_value", "seek_from", "seek_to",
 ]);
 
 const EPSILON = 0.001;
