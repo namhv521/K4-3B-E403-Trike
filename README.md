@@ -4,7 +4,7 @@
 
 ## 👥 Thành viên nhóm & Phân công vai trò
 
-**Lớp:** 3B · **Phòng:** E403 · **Cụm:** 02 · **Track:** C
+**Lớp:** 3B · **Phòng:** E403 · **Cụm:** 02 · **Track:** D
 
 | Họ và Tên | Mã Học Viên | Vai trò chính | Phần việc đảm nhiệm trong dự án |
 |---|---|---|---|
@@ -158,9 +158,9 @@ Giám khảo có thể hỏi **bất kỳ thành viên nào** về phần có t�
 |---|---|
 | CP1 | *(cập nhật lúc khai mạc)* |
 | CP2 | *(cập nhật lúc khai mạc)* |
-| CP3 | *(cập nhật lúc khai mạc)* |
-| CP4 | *(cập nhật lúc khai mạc)* |
-| CP5 | *(cập nhật lúc khai mạc)* |
+| CP3 | https://docs.google.com/forms/d/e/1FAIpQLSdDA-nr7od46e1lGwSvnCQgIdvJ9y6UO67n0MwpuvLuIXFLpg/viewform |
+| CP4 | https://docs.google.com/forms/d/e/1FAIpQLSeWgSZB9ttytPxD7N3ZUnqdTlAw0ASHp-CEIvmmccoNfSZ6Zw/viewform?usp=send_form |
+| CP5 | https://docs.google.com/forms/d/e/1FAIpQLSc3I0S17plO4slYeiJKxvdS-QGT_quHXnNVSTod5rKWImiIYQ/viewform?usp=send_form |
 
 > **Đội trưởng nộp form thay cả nhóm** — một phiếu cho cả nhóm ở mỗi mốc, không phải mỗi thành viên tự nộp.
 > **25 điểm nộp là điểm chung của nhóm**: mọi thành viên cùng được hoặc cùng mất.
