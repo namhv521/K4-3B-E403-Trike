@@ -25,31 +25,48 @@ def _publish(staging, output):
         os.replace(item, output / item.name)
 
 
-def publish_fixture(fixture_path, output_dir, renderer=render_video):
+def require_lesson_sources(records):
+    templates = {"mau-kich-ban", "readme", "khung-hinh"}
+    content = [record for record in records if Path(record["source"]).stem.lower() not in templates]
+    if not content:
+        raise ValueError("Input chỉ chứa file mẫu; hãy thêm nội dung bài giảng, slide, PDF, audio hoặc video.")
+    return content
+
+
+def publish_fixture(fixture_path, output_dir, renderer=render_video, tts_generator=generate_tts):
     lesson = validate_lesson(json.loads(Path(fixture_path).read_text(encoding="utf-8")))
-    lesson["generation"] = {"mode": "mock", "notice": "Fixture offline; OpenRouter was not called."}
+    lesson["generation"] = {"mode": "mock", "notice": "Fixture content; OpenRouter was not called."}
     output_dir = Path(output_dir)
     with tempfile.TemporaryDirectory(dir=output_dir.parent if output_dir.parent.exists() else None) as folder:
         staging = Path(folder)
         _write_json(staging / "lesson.json", lesson)
         _write_json(staging / "sources.json", [])
-        _write_json(staging / "ai-trace.json", {"ai_called": False, "mode": "mock"})
+        voice_path = staging / "narration.mp3"
+        tts_trace = tts_generator(lesson, None, voice_path)
+        _write_json(staging / "ai-trace.json", {"ai_called": False, "mode": "mock", "tts": tts_trace})
         (staging / "transcript.txt").write_text(lesson["narration"], encoding="utf-8")
-        renderer(lesson, None, staging / "recap.mp4")
+        renderer(lesson, voice_path, staging / "recap.mp4")
         _publish(staging, output_dir)
     return output_dir
 
 
 def generate(input_path, prompt, output_dir):
-    client = OpenRouterClient()
+    client = None
     traces = []
 
+    def get_client():
+        nonlocal client
+        if client is None:
+            client = OpenRouterClient()
+        return client
+
     def transcriber(path):
-        text, trace = client.transcribe(path)
+        text, trace = get_client().transcribe(path)
         traces.append(trace)
         return text
 
-    records = extract_path(Path(input_path), transcriber=transcriber)
+    records = require_lesson_sources(extract_path(Path(input_path), transcriber=transcriber))
+    client = get_client()
     lesson, content_traces = generate_lesson(records, prompt, client)
     traces.extend(content_traces)
     generate_images(lesson["scenes"], client, enabled=False)

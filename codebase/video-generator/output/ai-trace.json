@@ -1,4 +1,9 @@
 {
   "ai_called": false,
-  "mode": "mock"
+  "mode": "mock",
+  "tts": {
+    "operation": "tts",
+    "provider": "edge-tts",
+    "voice": "vi-VN-HoaiMyNeural"
+  }
 }

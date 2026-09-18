@@ -1,7 +1,11 @@
 {
+  "note": "Reference only; configure these values with environment variables.",
   "text_model": "openrouter/free",
   "transcription_model": "openai/whisper-1",
-  "tts_policy": "free-only",
+  "tts": {
+    "provider": "edge-tts",
+    "voice": "vi-VN-HoaiMyNeural"
+  },
   "image_generation": {
     "enabled": false
   }
