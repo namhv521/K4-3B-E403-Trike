@@ -16,15 +16,35 @@ WIDTH, HEIGHT = 1280, 720
 REMOTION_ROOT = Path(__file__).resolve().parent / "remotion-recap"
 
 
+def _find_browser():
+    env_browser = os.getenv("REMOTION_BROWSER_EXECUTABLE") or os.getenv("CHROME_BIN")
+    if env_browser and Path(env_browser).is_file():
+        return str(Path(env_browser))
+    candidates = [
+        Path("C:/Program Files/Google/Chrome/Application/chrome.exe"),
+        Path("C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"),
+        Path(os.getenv("PROGRAMFILES", "C:/Program Files")) / "Google/Chrome/Application/chrome.exe",
+        Path(os.getenv("ProgramFiles(x86)", "C:/Program Files (x86)")) / "Microsoft/Edge/Application/msedge.exe",
+    ]
+    for candidate in candidates:
+        if candidate.is_file():
+            return str(candidate)
+    return None
+
+
 def remotion_command(lesson, narration_path, output_path, public_narration_path=None):
     """Build the generic Remotion command without putting lesson text in logs."""
     output_path = Path(output_path)
     props = {"lesson": lesson, "narrationPath": public_narration_path or (Path(narration_path).name if narration_path else None)}
     cli = REMOTION_ROOT / "node_modules" / "@remotion" / "cli" / "remotion-cli.js"
-    return [
+    command = [
         "node", str(cli), "render", "src/index.ts", "VLearnRecap", str(output_path),
         "--props", json.dumps(props, ensure_ascii=False),
     ]
+    browser = _find_browser()
+    if browser:
+        command.extend(["--browser-executable", browser])
+    return command
 
 
 def _font(size, bold=False):
