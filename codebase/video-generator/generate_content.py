@@ -17,15 +17,49 @@ DIGEST_PROMPT = """Tóm tắt nhóm SOURCE_RECORDS thành JSON gồm facts và s
 Giữ đủ các khái niệm, quan hệ, ví dụ và điểm dễ nhầm. Không thêm kiến thức ngoài nguồn."""
 
 
+def _json_size(value):
+    return len(json.dumps(value, ensure_ascii=False))
+
+
+def _split_record(record, limit):
+    if _json_size([record]) <= limit:
+        return [record]
+    if not isinstance(record.get("text"), str) or not record["text"]:
+        raise ValueError("A source record exceeds the digest context budget")
+
+    chunks, remaining, number = [], record["text"], 1
+    locator = record.get("locator", record.get("source", "source"))
+    while remaining:
+        low, high, best = 1, len(remaining), None
+        while low <= high:
+            length = (low + high) // 2
+            candidate = {
+                **record,
+                "text": remaining[:length],
+                "locator": f"{locator}:chunk:{number}",
+            }
+            if _json_size([candidate]) <= limit:
+                best, low = candidate, length + 1
+            else:
+                high = length - 1
+        if best is None:
+            raise ValueError("Digest context budget is too small for source metadata")
+        chunks.append(best)
+        remaining = remaining[len(best["text"]):]
+        number += 1
+    return chunks
+
+
 def _batch_records(records, limit):
-    batches, current, size = [], [], 0
-    for record in records:
-        record_size = len(json.dumps(record, ensure_ascii=False))
-        if current and size + record_size > limit:
+    batches, current = [], []
+    expanded = [part for record in records for part in _split_record(record, limit)]
+    for record in expanded:
+        if current and _json_size(current + [record]) > limit:
             batches.append(current)
-            current, size = [], 0
+            current = []
+        if _json_size([record]) > limit:
+            raise ValueError("A source record exceeds the digest context budget")
         current.append(record)
-        size += record_size
     if current:
         batches.append(current)
     return batches

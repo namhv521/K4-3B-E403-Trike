@@ -4,6 +4,8 @@
   "tts": {
     "operation": "tts",
     "provider": "edge-tts",
-    "voice": "vi-VN-HoaiMyNeural"
+    "voice": "vi-VN-HoaiMyNeural",
+    "alignment": "ffmpeg-apad",
+    "duration_seconds": 85
   }
 }

@@ -171,6 +171,6 @@
   ],
   "generation": {
     "mode": "mock",
-    "notice": "Fixture offline; OpenRouter was not called."
+    "notice": "Fixture content; OpenRouter was not called."
   }
 }

@@ -27,7 +27,7 @@ class ContentTests(unittest.TestCase):
             {"text": "A" * 20, "source": "a.md", "locator": "line:1"},
             {"text": "B" * 20, "source": "b.md", "locator": "line:1"},
         ]
-        _, traces = generate_lesson(records, "Tổng hợp", client, batch_chars=20)
+        _, traces = generate_lesson(records, "Tổng hợp", client, batch_chars=100)
         self.assertEqual(["source_digest_v1", "source_digest_v1", "interactive_lesson_v2"], [call[1] for call in client.calls])
         self.assertEqual(3, len(traces))
 
@@ -37,10 +37,22 @@ class ContentTests(unittest.TestCase):
             {"text": str(index) * 20, "source": f"{index}.md", "locator": "line:1"}
             for index in range(8)
         ]
-        generate_lesson(records, "Tổng hợp", client, batch_chars=20, digest_chars=220)
+        generate_lesson(records, "Tổng hợp", client, batch_chars=100, digest_chars=220)
         final_messages = next(messages for messages, schema in client.calls if schema == "interactive_lesson_v2")
         final_payload = final_messages[1]["content"].split("SOURCE_DIGESTS:\n", 1)[1]
         self.assertLessEqual(len(final_payload), 220)
+
+    def test_oversized_source_record_is_split_before_digest_calls(self):
+        client = FakeClient()
+        records = [{"text": "kiến thức " * 1000, "source": "audio.mp3", "locator": "audio:full"}]
+        generate_lesson(records, "Tổng hợp", client, batch_chars=500)
+        digest_payloads = [
+            messages[1]["content"] for messages, schema in client.calls
+            if schema == "source_digest_v1"
+        ]
+        self.assertGreater(len(digest_payloads), 1)
+        self.assertTrue(all(len(payload) <= 500 for payload in digest_payloads))
+        self.assertTrue(any("audio:full:chunk:" in payload for payload in digest_payloads))
 
 
 if __name__ == "__main__":
