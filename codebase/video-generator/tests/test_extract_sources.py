@@ -28,6 +28,21 @@ class ExtractSourceTests(unittest.TestCase):
         self.assertEqual("Khái niệm AI Ví dụ", records[0]["text"])
         self.assertEqual("slide:1", records[0]["locator"])
 
+    def test_reads_docx_paragraph_text(self):
+        xml = (
+            '<w:document xmlns:w="w"><w:body>'
+            '<w:p><w:r><w:t>Khái niệm AI</w:t></w:r></w:p>'
+            '<w:p><w:r><w:t>Ví dụ ứng dụng</w:t></w:r></w:p>'
+            '</w:body></w:document>'
+        )
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder, "lesson.docx")
+            with zipfile.ZipFile(path, "w") as archive:
+                archive.writestr("word/document.xml", xml)
+            records = extract_path(path)
+        self.assertEqual(["Khái niệm AI", "Ví dụ ứng dụng"], [item["text"] for item in records])
+        self.assertEqual("paragraph:1", records[0]["locator"])
+
     def test_routes_audio_to_transcriber(self):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder, "lesson.mp3")

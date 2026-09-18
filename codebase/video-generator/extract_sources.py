@@ -40,6 +40,19 @@ def _extract_pptx(path):
     return records
 
 
+def _extract_docx(path):
+    records = []
+    with zipfile.ZipFile(path) as archive:
+        root = ElementTree.fromstring(archive.read("word/document.xml"))
+    for paragraph in root.iter():
+        if not paragraph.tag.endswith("}p"):
+            continue
+        text = "".join(node.text or "" for node in paragraph.iter() if node.tag.endswith("}t"))
+        if text.strip():
+            records.append(_record(text, path, f"paragraph:{len(records) + 1}"))
+    return records
+
+
 def _extract_pdf(path):
     records = []
     for page_number, page in enumerate(PdfReader(str(path)).pages, 1):
@@ -88,6 +101,8 @@ def extract_path(path: Path, transcriber=None) -> list[dict]:
         return _extract_text(path)
     if extension == ".pptx":
         return _extract_pptx(path)
+    if extension == ".docx":
+        return _extract_docx(path)
     if extension == ".pdf":
         return _extract_pdf(path)
     if extension in AUDIO_EXTENSIONS | VIDEO_EXTENSIONS:

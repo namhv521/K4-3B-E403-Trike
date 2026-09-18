@@ -14,3 +14,8 @@ tracks/
 04-rubric.md
 canvas.md
 Asset/
+
+**/__pycache__/
+codebase/video-generator/output/
+codebase/interactive-website/runtime-logs/*
+!codebase/interactive-website/runtime-logs/.gitkeep

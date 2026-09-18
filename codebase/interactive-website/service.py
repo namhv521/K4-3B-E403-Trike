@@ -11,7 +11,7 @@ from collections import Counter, defaultdict
 from pathlib import Path, PurePosixPath
 
 
-ALLOWED_UPLOAD_EXTENSIONS = {".md", ".txt", ".pptx", ".pdf", ".mp3", ".wav", ".m4a", ".aac", ".flac", ".ogg", ".mp4", ".mov", ".webm", ".mkv"}
+ALLOWED_UPLOAD_EXTENSIONS = {".md", ".txt", ".pptx", ".docx", ".pdf", ".mp3", ".wav", ".m4a", ".aac", ".flac", ".ogg", ".mp4", ".mov", ".webm", ".mkv"}
 ALLOWED_EVENT_FIELDS = {
     "session_id", "timestamp", "event", "video_time", "checkpoint_id", "attempt_number",
     "selected_answer", "is_correct", "misconception_id", "misconception_label",
@@ -25,6 +25,13 @@ ALLOWED_EVENT_FIELDS = {
 def allowed_upload_name(name):
     candidate = PurePosixPath(str(name).replace("\\", "/"))
     return bool(candidate.name and candidate.suffix.lower() in ALLOWED_UPLOAD_EXTENSIONS and not candidate.is_absolute() and ".." not in candidate.parts)
+
+
+def upload_validation_error(name):
+    candidate = PurePosixPath(str(name).replace("\\", "/"))
+    if candidate.suffix.lower() == ".ppt" and candidate.name and not candidate.is_absolute() and ".." not in candidate.parts:
+        return "File PowerPoint .ppt cũ chưa được hỗ trợ. Hãy mở và lưu lại thành .pptx trước khi tạo video."
+    return "Chỉ nhận học liệu được hỗ trợ; không nhận đường dẫn thoát thư mục hoặc file thực thi."
 
 
 def allowlisted_event(event):
@@ -62,7 +69,7 @@ class JobStore:
         for name, body in files:
             if not allowed_upload_name(name):
                 shutil.rmtree(root, ignore_errors=True)
-                raise ValueError("Chỉ nhận học liệu được hỗ trợ; không nhận đường dẫn thoát thư mục hoặc file thực thi.")
+                raise ValueError(upload_validation_error(name))
             destination = source_root / PurePosixPath(name)
             destination.parent.mkdir(parents=True, exist_ok=True)
             destination.write_bytes(body)
@@ -95,6 +102,22 @@ class JobStore:
         if not bundle_id or "/" in bundle_id or "\\" in bundle_id or ".." in bundle_id:
             raise ValueError("Bundle id không hợp lệ.")
         return self.bundles / bundle_id
+
+    def list_published_bundles(self):
+        bundles = []
+        for root in self.bundles.iterdir():
+            if not root.is_dir() or not all((root / name).is_file() for name in ("lesson.json", "sources.json", "recap.mp4")):
+                continue
+            try:
+                lesson = json.loads((root / "lesson.json").read_text(encoding="utf-8"))
+                title = str(lesson["title"]).strip()
+                checkpoints = lesson["checkpoints"]
+                if not title or not isinstance(checkpoints, list):
+                    continue
+            except (KeyError, TypeError, ValueError, json.JSONDecodeError, OSError):
+                continue
+            bundles.append({"bundle_id": root.name, "title": title, "checkpoint_count": len(checkpoints)})
+        return sorted(bundles, key=lambda bundle: (bundle["title"].casefold(), bundle["bundle_id"]))
 
     def run(self, job_id, generator_dir):
         source_root = self._job_dir(job_id) / "input"
@@ -186,12 +209,19 @@ class TelemetryStore:
         for session_id in sessions:
             session_events = [event for event in events if event["session_id"] == session_id]
             last_event = max(session_events, key=lambda event: event["timestamp"])
-            session_rows.append({
+            row = {
                 "session_id": session_id,
                 "event_count": len(session_events),
                 "last_event_at": last_event["timestamp"],
                 "completed": session_id in completion,
-            })
+            }
+            if session_id in completion:
+                completed_event = completion[session_id]
+                if isinstance(completed_event.get("score"), (int, float)):
+                    row["score"] = completed_event["score"]
+                if isinstance(completed_event.get("first_attempt_accuracy"), (int, float)):
+                    row["first_attempt_accuracy"] = completed_event["first_attempt_accuracy"]
+            session_rows.append(row)
         session_rows.sort(key=lambda row: (row["last_event_at"], row["session_id"]), reverse=True)
         recent_events = [
             {
@@ -203,9 +233,11 @@ class TelemetryStore:
             }
             for event in sorted(events, key=lambda event: (event["timestamp"], event["session_id"]))[-20:]
         ]
+        completed_scores = [item["score"] for item in completion.values() if isinstance(item.get("score"), (int, float))]
         return {
             "views": len(sessions), "completed_sessions": len(completion),
             "fast_completion_count": sum(item.get("needs_review") is True for item in completion.values()),
+            "average_score": round(sum(completed_scores) / len(completed_scores), 1) if completed_scores else 0,
             "average_response_time_ms": round(sum(response_times) / len(response_times)) if response_times else 0,
             "average_completion_seconds": round(sum(item.get("completion_seconds", 0) for item in completion.values()) / len(completion)) if completion else 0,
             "checkpoints": rows,

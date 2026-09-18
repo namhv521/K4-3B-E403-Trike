@@ -85,7 +85,8 @@ h2 { font-size: clamp(1.25rem, 3vw, 2rem); letter-spacing: -0.035em; line-height
 .admin-panel h2, .admin-panel h3 { margin: 0 0 10px; }
 .admin-panel > p { color: var(--mist); line-height: 1.5; margin: 0 0 18px; }
 .admin-panel label { display: block; font-weight: 700; margin: 16px 0 7px; }
-.admin-panel textarea { background: var(--paper); border: 1px solid var(--line); box-sizing: border-box; color: var(--ink); font: inherit; padding: 12px; resize: vertical; width: 100%; }
+.admin-panel textarea, .admin-panel select { background: var(--paper); border: 1px solid var(--line); box-sizing: border-box; color: var(--ink); font: inherit; padding: 12px; resize: vertical; width: 100%; }
+.admin-panel select:disabled { cursor: not-allowed; opacity: 0.7; }
 .folder-input { background: var(--slate); border: 1px dashed var(--signal-deep); color: var(--paper); padding: 16px; }
 .folder-input input { display: block; margin: 10px 0; max-width: 100%; }
 .folder-input output { color: #b8cbc7; display: block; font-size: .9rem; }

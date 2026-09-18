@@ -34,12 +34,14 @@ Copy-Item "C:\duong-dan\slide.pptx" .\input\
 Định dạng hỗ trợ:
 
 - Văn bản: `.md`, `.txt`
-- Slide và tài liệu: `.pptx`, `.pdf`
+- Slide và tài liệu: `.pptx`, `.docx`, `.pdf`
 - Audio: `.mp3`, `.wav`, `.m4a`, `.aac`, `.flac`, `.ogg`
 - Video: `.mp4`, `.mov`, `.webm`, `.mkv`
 
 Không dùng riêng `mau-kich-ban.md`, `README.md` hoặc `khung-hinh.md` làm đầu
 vào. Đây chỉ là file mẫu; agent cần ít nhất một file chứa kiến thức bài giảng.
+Định dạng Office cũ `.ppt` và `.doc` chưa được hỗ trợ; hãy mở chúng trong
+Microsoft Office hoặc LibreOffice rồi lưu thành `.pptx` hoặc `.docx`.
 
 ## 3. Chạy agent thật
 

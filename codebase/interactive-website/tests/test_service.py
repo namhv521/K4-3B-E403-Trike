@@ -9,8 +9,16 @@ from service import JobStore, TelemetryStore, allowed_upload_name
 class ServiceTests(unittest.TestCase):
     def test_upload_allowlist_rejects_untrusted_executable_and_paths(self):
         self.assertTrue(allowed_upload_name("slides/week-1.pptx"))
+        self.assertTrue(allowed_upload_name("documents/lesson.docx"))
         self.assertFalse(allowed_upload_name("../secret.pdf"))
         self.assertFalse(allowed_upload_name("lesson.exe"))
+
+    def test_job_store_explains_that_legacy_powerpoint_must_be_converted_to_pptx(self):
+        with TemporaryDirectory() as folder:
+            jobs = JobStore(Path(folder))
+
+            with self.assertRaisesRegex(ValueError, r"PowerPoint \.ppt cũ.*\.pptx"):
+                jobs.create("Tạo video recap từ slide", [("slides/lecture-1.ppt", b"legacy")])
 
     def test_telemetry_strips_secrets_and_aggregates_misconceptions(self):
         with TemporaryDirectory() as folder:
@@ -83,6 +91,51 @@ class ServiceTests(unittest.TestCase):
             "event": "session_completed", "checkpoint_id": None, "is_correct": None,
         })
         self.assertNotIn("input_value", report["recent_events"][0])
+
+    def test_analytics_reports_average_score_and_completed_anonymous_session_scores(self):
+        with TemporaryDirectory() as folder:
+            telemetry = TelemetryStore(Path(folder))
+            telemetry.append("bundle-1", {
+                "session_id": "session-low", "timestamp": "2026-09-18T00:01:00Z",
+                "event": "session_completed", "score": 4,
+                "first_attempt_accuracy": 40,
+            })
+            telemetry.append("bundle-1", {
+                "session_id": "session-high", "timestamp": "2026-09-18T00:02:00Z",
+                "event": "session_completed", "score": 8,
+                "first_attempt_accuracy": 80,
+            })
+            telemetry.append("bundle-other", {
+                "session_id": "session-other", "timestamp": "2026-09-18T00:03:00Z",
+                "event": "session_completed", "score": 10,
+            })
+            report = telemetry.analytics("bundle-1")
+
+        self.assertEqual(report["average_score"], 6)
+        self.assertEqual(report["sessions"], [
+            {"session_id": "session-high", "event_count": 1, "last_event_at": "2026-09-18T00:02:00Z", "completed": True, "score": 8, "first_attempt_accuracy": 80},
+            {"session_id": "session-low", "event_count": 1, "last_event_at": "2026-09-18T00:01:00Z", "completed": True, "score": 4, "first_attempt_accuracy": 40},
+        ])
+
+    def test_job_store_lists_only_published_lectures_with_safe_metadata(self):
+        with TemporaryDirectory() as folder:
+            jobs = JobStore(Path(folder))
+            published = jobs.bundle_dir("lecture-1")
+            published.mkdir(parents=True)
+            (published / "lesson.json").write_text(json.dumps({
+                "title": "Lecture về AI", "checkpoints": [{"id": "cp-1"}, {"id": "cp-2"}],
+            }), encoding="utf-8")
+            (published / "sources.json").write_text("[]", encoding="utf-8")
+            (published / "recap.mp4").write_bytes(b"video")
+            incomplete = jobs.bundle_dir("unfinished")
+            incomplete.mkdir(parents=True)
+            (incomplete / "lesson.json").write_text("{}", encoding="utf-8")
+
+            lectures = jobs.list_published_bundles()
+
+        self.assertEqual(lectures, [{
+            "bundle_id": "lecture-1", "title": "Lecture về AI", "checkpoint_count": 2,
+        }])
 
     def test_job_store_rejects_paths_outside_runtime(self):
         with TemporaryDirectory() as folder:

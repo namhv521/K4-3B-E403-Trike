@@ -89,6 +89,8 @@ class WebsiteHandler(SimpleHTTPRequestHandler):
                 return self.send_json(JOBS.get(parsed.path.rsplit("/", 1)[-1]))
             except (FileNotFoundError, ValueError):
                 return self.send_error_json(HTTPStatus.NOT_FOUND, "Không tìm thấy job.")
+        if parsed.path == "/api/admin/bundles":
+            return self.send_json(JOBS.list_published_bundles())
         if parsed.path == "/api/admin/analytics":
             return self.send_json(TELEMETRY.analytics(parse_qs(parsed.query).get("bundle_id", [""])[0]))
         return super().do_GET()
