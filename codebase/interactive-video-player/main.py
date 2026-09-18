@@ -6,6 +6,8 @@ import os
 import sys
 from pathlib import Path
 
+from lesson_schema import validate_lesson
+
 
 os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
 
@@ -22,11 +24,7 @@ def load_bundle(asset_dir):
         lesson = json.loads(lesson_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as error:
         raise ValueError("lesson.json is not valid JSON") from error
-    if not isinstance(lesson.get("checkpoints"), list) or not lesson["checkpoints"]:
-        raise ValueError("lesson.json checkpoints must not be empty")
-    if not isinstance(lesson.get("duration_seconds"), (int, float)):
-        raise ValueError("lesson.json duration_seconds is required")
-    return lesson, video_path, audio_path
+    return validate_lesson(lesson), video_path, audio_path
 
 
 def application_root():
@@ -35,7 +33,7 @@ def application_root():
 
 def writable_root():
     if getattr(sys, "frozen", False):
-        return Path(sys.executable).resolve().parent
+        return Path(os.getenv("LOCALAPPDATA", Path.home())) / "InteractiveRecap"
     return Path(__file__).resolve().parent
 
 

@@ -46,7 +46,8 @@ python main.py --windowed
 - `Esc`: thoát.
 
 Điểm chỉ tính lần trả lời đầu tiên. Các lần trả lời sau và misconception vẫn
-được ghi vào `runtime-logs/YYYY-MM-DD.jsonl`.
+được ghi vào `runtime-logs/YYYY-MM-DD.jsonl` khi chạy source, hoặc
+`%LOCALAPPDATA%\InteractiveRecap\runtime-logs` khi chạy file EXE.
 
 ## Đóng gói Windows EXE
 

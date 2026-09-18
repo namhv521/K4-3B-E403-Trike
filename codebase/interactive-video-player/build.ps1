@@ -1,5 +1,8 @@
 $ErrorActionPreference = "Stop"
-New-Item -ItemType Directory -Force build | Out-Null
+$build = Join-Path $PSScriptRoot "build"
+$work = Join-Path $build "work"
+$dist = Join-Path $PSScriptRoot "dist"
+New-Item -ItemType Directory -Force $build | Out-Null
 $assets = Join-Path $PSScriptRoot "assets"
 $entry = Join-Path $PSScriptRoot "main.py"
 python -m PyInstaller `
@@ -8,9 +11,9 @@ python -m PyInstaller `
   --onefile `
   --windowed `
   --name interactive-recap `
-  --specpath build `
-  --workpath build\work `
-  --distpath dist `
+  --specpath $build `
+  --workpath $work `
+  --distpath $dist `
   --add-data "$assets;assets" `
   $entry
 
