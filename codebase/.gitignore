@@ -1,4 +1,0 @@
-**/__pycache__/
-video-generator/output/
-interactive-website/runtime-logs/*
-!interactive-website/runtime-logs/.gitkeep
