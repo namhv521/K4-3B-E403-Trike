@@ -9,7 +9,7 @@
   </head>
   <body>
     <main class="lesson-shell admin-shell">
-      <header class="lesson-header"><a class="wordmark" href="/admin">VLearn <span>admin</span></a><a class="text-button" href="/">Mở learner demo</a></header>
+      <header class="lesson-header"><a class="wordmark" href="/admin">VLearn <span>admin</span></a><div class="role-tools"><a class="text-button" href="/">Chuyển sang User</a></div></header>
       <section class="lesson-intro"><div><h1>Studio recap và điểm cần ôn</h1><p class="generation-notice">Prototype local: role admin chưa phải hệ thống đăng nhập production. OpenRouter key chỉ ở server local.</p></div></section>
       <section class="admin-grid" aria-label="Công cụ quản trị">
         <form id="create-job" class="admin-panel" novalidate>
@@ -18,20 +18,35 @@
           <label class="folder-input" for="source-folder"><span>Folder học liệu</span><input id="source-folder" name="files" type="file" webkitdirectory multiple required><output id="file-count">Chưa chọn file hỗ trợ (.pptx, không phải .ppt)</output></label>
           <label for="generation-prompt">Yêu cầu video</label>
           <textarea id="generation-prompt" name="prompt" rows="4" required>Tạo video recap 60-90 giây, bao phủ các ý quan trọng và tạo 3 checkpoint có căn cứ.</textarea>
-          <button class="primary-button" type="submit">Tạo bundle Remotion</button>
+          <label for="target-lecture-select">Đưa video vào lecture</label>
+          <select id="target-lecture-select" required></select>
+          <button class="primary-button" type="submit">Tạo / cập nhật lecture</button>
           <p id="job-status" class="admin-status" role="status" aria-live="polite">Chưa có job.</p>
           <a id="bundle-link" class="primary-button" hidden>Kiểm tra video với role user</a>
         </form>
-        <section class="admin-panel" aria-labelledby="analytics-title">
+        <section class="admin-panel" aria-labelledby="user-title">
+          <h2 id="user-title">User local để test role</h2>
+          <p>Tạo tên hiển thị local. Đây không phải đăng nhập production và không yêu cầu email hoặc mật khẩu.</p>
+          <form id="create-user" class="inline-form"><label for="new-user-name">Tên user</label><input id="new-user-name" maxlength="40" required><button class="primary-button" type="submit">Tạo user</button></form>
+          <p id="user-status" class="admin-status" role="status" aria-live="polite"></p>
+          <ol id="admin-user-list" class="analytics-list"></ol>
+        </section>
+        <section class="admin-panel dashboard-panel" aria-labelledby="analytics-title">
           <h2 id="analytics-title">Dashboard lớp học</h2>
           <label for="lecture-select">Lecture đang xem</label>
           <select id="lecture-select" disabled><option value="">Chưa có lecture được publish</option></select>
           <p id="analytics-empty">Chọn một lecture đã publish. Dữ liệu chỉ xuất hiện sau khi learner học qua đường dẫn của lecture đó.</p>
           <div id="analytics" hidden>
             <div class="analytics-summary"><p><strong id="metric-views">0</strong><span>Lượt xem</span></p><p><strong id="metric-completed">0</strong><span>Hoàn thành</span></p><p><strong id="metric-score">0/10</strong><span>Điểm TB</span></p><p><strong id="metric-fast">0</strong><span>Xem quá nhanh</span></p><p><strong id="metric-response-time">0 giây</strong><span>Phản hồi TB</span></p><p><strong id="metric-completion-time">0 giây</strong><span>Hoàn thành TB</span></p></div>
+            <section class="analytics-charts" aria-label="Biểu đồ dashboard">
+              <figure class="chart-card"><figcaption><strong>Tiến độ lớp</strong><span>Tỷ lệ phiên đã hoàn thành</span></figcaption><div id="completion-chart" class="chart-canvas"></div><p id="completion-chart-note" class="chart-note"></p></figure>
+              <figure class="chart-card"><figcaption><strong>Điểm theo phiên</strong><span>Điểm các phiên hoàn thành gần đây</span></figcaption><div id="score-chart" class="chart-canvas"></div><p id="score-chart-note" class="chart-note"></p></figure>
+              <figure class="chart-card"><figcaption><strong>Nhịp hoạt động</strong><span>Event gần đây theo thời gian</span></figcaption><div id="activity-chart" class="chart-canvas"></div><p id="activity-chart-note" class="chart-note"></p></figure>
+            </section>
             <h3>Checkpoint cần tập trung</h3><ol id="checkpoint-analytics" class="analytics-list"></ol>
             <h3>Nhầm lẫn lặp lại</h3><ol id="misconception-analytics" class="analytics-list"></ol>
-            <h3>Điểm theo phiên ẩn danh</h3><ol id="session-analytics" class="analytics-list"></ol>
+            <h3>Users trong lecture</h3><ol id="user-analytics" class="analytics-list"></ol>
+            <h3>Điểm theo phiên local</h3><ol id="session-analytics" class="analytics-list"></ol>
             <h3>Hoạt động gần đây</h3><ol id="event-analytics" class="analytics-list"></ol>
           </div>
         </section>

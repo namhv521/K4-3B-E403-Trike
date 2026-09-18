@@ -2,6 +2,7 @@ import json
 import re
 import sys
 import unittest
+from copy import deepcopy
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -69,6 +70,14 @@ class ContentTests(unittest.TestCase):
         self.assertNotIn("text", catalog[0])
         self.assertTrue(catalog[0]["ref"].startswith("src-"))
 
+    def test_absolute_extractor_paths_map_to_the_published_source_catalog(self):
+        client = FakeClient()
+        records = [{"text": "AI là lĩnh vực rộng.", "source": r"C:\runtime\jobs\job-1\input\lesson.md", "locator": "line:1"}]
+
+        lesson_result, _ = generate_lesson(records, "Tổng hợp", client)
+
+        self.assertTrue(lesson_result["scenes"][0]["source_refs"][0].startswith("src-"))
+
     def test_rejects_lesson_citation_that_is_not_in_source_catalog(self):
         class UngroundedClient(FakeClient):
             def chat_json(self, messages, schema):
@@ -81,6 +90,32 @@ class ContentTests(unittest.TestCase):
         records = [{"text": "AI là lĩnh vực rộng.", "source": "lesson.md", "locator": "line:1"}]
         with self.assertRaisesRegex(ValueError, "unsupported source references"):
             generate_lesson(records, "Tổng hợp", client)
+
+    def test_repairs_a_parseable_lesson_that_is_missing_a_required_scene_field(self):
+        class RepairingClient(FakeClient):
+            def __init__(self):
+                super().__init__()
+                self.lesson_attempts = 0
+
+            def chat_json(self, messages, schema):
+                value, trace = super().chat_json(messages, schema)
+                if schema == "interactive_lesson_v2":
+                    self.lesson_attempts += 1
+                    if self.lesson_attempts == 1:
+                        value = deepcopy(value)
+                        value["scenes"][0].pop("title")
+                return value, trace
+
+        client = RepairingClient()
+        records = [{"text": "AI là lĩnh vực rộng.", "source": "lesson.md", "locator": "line:1"}]
+
+        result, traces = generate_lesson(records, "Tổng hợp", client)
+
+        self.assertEqual("AI", result["scenes"][0]["title"])
+        self.assertEqual(2, client.lesson_attempts)
+        self.assertEqual(2, len(traces))
+        repair_messages = [messages for messages, schema in client.calls if schema == "interactive_lesson_v2"][1]
+        self.assertIn("scene 0 title must be non-empty text", repair_messages[-1]["content"])
 
 
 if __name__ == "__main__":

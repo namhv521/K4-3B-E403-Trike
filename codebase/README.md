@@ -135,7 +135,7 @@ Không dùng riêng file template như `mau-kich-ban.md`, `README.md` hoặc
 
 ```powershell
 $env:OPENROUTER_API_KEY="sk-or-v1-..."
-$env:OPENROUTER_TEXT_MODEL="openrouter/free"
+$env:OPENROUTER_TEXT_MODEL="inclusionai/ling-3.0-flash-fin:free"
 
 python agent.py `
   --input ".\input" `

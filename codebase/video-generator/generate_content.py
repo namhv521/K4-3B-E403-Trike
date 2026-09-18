@@ -16,6 +16,10 @@ Mỗi checkpoint có id, time, concept, question, explanation, source_refs và �
 Mỗi option có id, text, is_correct; option sai phải có misconception {id,label}, option đúng có misconception null.
 Có đúng một đáp án đúng. Các checkpoint cách nhau trên 10 giây. Nội dung mục tiêu dài 60-90 giây."""
 
+LESSON_REPAIR_PROMPT = """JSON lesson vừa trả về không đạt schema bắt buộc: {error}.
+Hãy trả về lại TOÀN BỘ JSON lesson đã sửa, không markdown và không giải thích. Giữ nội dung bám SOURCE_DIGESTS,
+giữ source_refs chỉ trong ALLOWED_SOURCE_REFS, và điền mọi field bắt buộc cho scene/checkpoint/option."""
+
 DIGEST_PROMPT = """Tóm tắt nhóm SOURCE_RECORDS thành JSON gồm facts và source_refs.
 Giữ đủ các khái niệm, quan hệ, ví dụ và điểm dễ nhầm. Không thêm kiến thức ngoài nguồn."""
 
@@ -49,7 +53,8 @@ def _attach_source_refs(records, catalog):
     }
     enriched = []
     for record in records:
-        ref = refs_by_location.get((str(record.get("source", "")), str(record.get("locator", ""))))
+        key = (Path(str(record.get("source", ""))).name, str(record.get("locator", "")))
+        ref = refs_by_location.get(key)
         if ref is None:
             raise ValueError("Every source record must map to a published source reference")
         enriched.append({**record, "source_ref": ref})
@@ -115,6 +120,22 @@ def _digest_batch(batch, client):
     ], "source_digest_v1")
 
 
+def _generate_valid_lesson(client, messages, allowed_source_refs):
+    """Ask the model to repair a parseable but schema-invalid lesson before failing the job."""
+    for attempt in range(3):
+        lesson, trace = client.chat_json(messages, "interactive_lesson_v2")
+        try:
+            return validate_lesson(lesson, allowed_source_refs=allowed_source_refs), trace
+        except ValueError as error:
+            if attempt == 2:
+                raise ValueError(f"Model returned an invalid interactive lesson after 3 attempts: {error}") from error
+            messages = [
+                *messages,
+                {"role": "assistant", "content": json.dumps(lesson, ensure_ascii=False)},
+                {"role": "user", "content": LESSON_REPAIR_PROMPT.format(error=str(error))},
+            ]
+
+
 def generate_lesson(records, prompt, client, batch_chars=12000, digest_chars=12000):
     digests, traces = [], []
     catalog = source_catalog(records)
@@ -136,12 +157,13 @@ def generate_lesson(records, prompt, client, batch_chars=12000, digest_chars=120
         raise ValueError("Source digests could not be reduced to the final context budget")
     payload = json.dumps(digests, ensure_ascii=False)
     allowed_source_refs = [item["ref"] for item in catalog]
-    lesson, trace = client.chat_json([
+    lesson_messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": (
             f"Yêu cầu: {prompt}\nALLOWED_SOURCE_REFS:\n"
             f"{json.dumps(allowed_source_refs, ensure_ascii=False)}\nSOURCE_DIGESTS:\n{payload}"
         )},
-    ], "interactive_lesson_v2")
+    ]
+    lesson, trace = _generate_valid_lesson(client, lesson_messages, allowed_source_refs)
     traces.append(trace)
-    return validate_lesson(lesson, allowed_source_refs=allowed_source_refs), traces
+    return lesson, traces

@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -21,6 +22,16 @@ class FakeTransport:
 
 
 class OpenRouterClientTests(unittest.TestCase):
+    def test_uses_ling_flash_free_as_default_text_model(self):
+        previous_model = os.environ.pop("OPENROUTER_TEXT_MODEL", None)
+        try:
+            client = OpenRouterClient("secret", transport=FakeTransport([]))
+        finally:
+            if previous_model is not None:
+                os.environ["OPENROUTER_TEXT_MODEL"] = previous_model
+
+        self.assertEqual("inclusionai/ling-3.0-flash-fin:free", client.text_model)
+
     def test_chat_json_uses_bearer_and_parses_content(self):
         response = {"choices": [{"message": {"content": "```json\n{\"title\": \"Bài học\"}\n```"}}], "usage": {"cost": 0}}
         transport = FakeTransport([(200, {"content-type": "application/json"}, json.dumps(response).encode())])
@@ -32,9 +43,23 @@ class OpenRouterClientTests(unittest.TestCase):
 
     def test_rejects_malformed_model_json(self):
         response = {"choices": [{"message": {"content": "không phải json"}}]}
-        client = OpenRouterClient("secret", transport=FakeTransport([(200, {}, json.dumps(response).encode())]))
+        client = OpenRouterClient("secret", transport=FakeTransport([(200, {}, json.dumps(response).encode())] * 3))
         with self.assertRaisesRegex(ValueError, "valid JSON"):
             client.chat_json([{"role": "user", "content": "x"}], "lesson")
+
+    def test_chat_json_retries_a_malformed_free_model_response(self):
+        malformed = {"choices": [{"message": {"content": None}}]}
+        valid = {"model": "demo/free", "choices": [{"message": {"content": "{\"title\": \"Bài học\"}"}}]}
+        transport = FakeTransport([
+            (200, {}, json.dumps(malformed).encode()),
+            (200, {}, json.dumps(valid).encode()),
+        ])
+
+        data, trace = OpenRouterClient("secret", transport=transport).chat_json([{"role": "user", "content": "x"}], "lesson")
+
+        self.assertEqual("Bài học", data["title"])
+        self.assertEqual("demo/free", trace["model"])
+        self.assertEqual(2, len(transport.calls))
 
     def test_free_tts_is_discovered_and_written(self):
         models = {"data": [{"id": "demo/free-tts", "pricing": {"input_audio": "0", "output_audio": "0"}}]}

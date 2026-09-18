@@ -3,10 +3,73 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from service import JobStore, TelemetryStore, allowed_upload_name
+from service import JobStore, LectureStore, TelemetryStore, UserStore, allowed_upload_name, generation_error_message, sanitize_generation_log
 
 
 class ServiceTests(unittest.TestCase):
+    def test_lecture_store_bootstraps_four_lectures_and_puts_existing_video_in_lecture_one(self):
+        with TemporaryDirectory() as folder:
+            root = Path(folder)
+            assets = root / "assets"
+            assets.mkdir()
+            (assets / "lesson.json").write_text(json.dumps({"title": "Bản đồ AI trong 85s", "checkpoints": [{"id": "cp-1"}]}), encoding="utf-8")
+            (assets / "sources.json").write_text("[]", encoding="utf-8")
+            (assets / "recap.mp4").write_bytes(b"video")
+            lectures = LectureStore(root / "runtime", JobStore(root / "runtime"))
+
+            lectures.ensure_lecture_one(assets)
+            catalog = lectures.list()
+
+            self.assertEqual([item["lecture_id"] for item in catalog], ["lecture1", "lecture2", "lecture3", "lecture4"])
+            self.assertEqual(catalog[0], {
+                "lecture_id": "lecture1", "title": "Lecture 1", "published": True,
+                "lesson_title": "Bản đồ AI trong 85s", "checkpoint_count": 1, "bundle_url": "/learn/lecture1",
+            })
+            self.assertFalse(catalog[1]["published"])
+            self.assertTrue((root / "runtime" / "bundles" / "lecture1" / "recap.mp4").is_file())
+
+    def test_local_users_are_created_safely_and_analytics_identifies_the_test_user(self):
+        with TemporaryDirectory() as folder:
+            root = Path(folder)
+            users = UserStore(root / "runtime")
+            learner = users.create("Minh Anh")
+            telemetry = TelemetryStore(root / "runtime" / "telemetry")
+            telemetry.append("lecture1", {
+                "session_id": "session-1", "timestamp": "2026-09-18T00:00:00Z", "event": "video_play",
+                "user_id": learner["id"], "user_name": learner["name"],
+            })
+            report = telemetry.analytics("lecture1")
+
+            self.assertEqual(learner["name"], "Minh Anh")
+            self.assertEqual(report["users"], [{"user_id": learner["id"], "user_name": "Minh Anh", "event_count": 1, "last_event_at": "2026-09-18T00:00:00Z", "completed": False}])
+            self.assertEqual(report["recent_events"][0]["user_name"], "Minh Anh")
+            with self.assertRaisesRegex(ValueError, "Tên user"):
+                users.create("<script>")
+
+    def test_generation_error_message_explains_missing_openrouter_key(self):
+        message = generation_error_message("RuntimeError: OPENROUTER_API_KEY is not configured", 1)
+
+        self.assertIn("OPENROUTER_API_KEY", message)
+        self.assertIn("PowerShell", message)
+
+    def test_generation_error_message_explains_timeout(self):
+        message = generation_error_message("Generation timed out after 300 seconds")
+
+        self.assertIn("quá thời gian", message)
+        self.assertIn("OpenRouter/free", message)
+
+    def test_generation_error_message_explains_invalid_model_lesson(self):
+        message = generation_error_message("ValueError: Model returned an invalid interactive lesson after 3 attempts: scene 0 title must be non-empty text", 1)
+
+        self.assertIn("OpenRouter", message)
+        self.assertIn("thiếu trường", message)
+
+    def test_generation_diagnostics_redact_openrouter_keys(self):
+        diagnostic = sanitize_generation_log("OpenRouter failed with Bearer sk-or-v1-secret-value")
+
+        self.assertNotIn("sk-or-v1-secret-value", diagnostic)
+        self.assertIn("[REDACTED]", diagnostic)
+
     def test_upload_allowlist_rejects_untrusted_executable_and_paths(self):
         self.assertTrue(allowed_upload_name("slides/week-1.pptx"))
         self.assertTrue(allowed_upload_name("documents/lesson.docx"))

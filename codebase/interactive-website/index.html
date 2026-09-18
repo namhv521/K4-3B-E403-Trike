@@ -10,10 +10,16 @@
   <body>
     <main class="lesson-shell">
       <header class="lesson-header">
-        <a class="wordmark" href="#player" aria-label="VLearn Interactive">VLearn <span>interactive</span></a>
-        <p>Ôn tập có checkpoint · không phải bài chấm điểm · <a href="/admin">Admin local</a></p>
+        <a class="wordmark" href="/" aria-label="VLearn Interactive">VLearn <span>interactive</span></a>
+        <div class="role-tools"><label for="user-select">Đang test với</label><select id="user-select" aria-label="Chọn user local"></select><a class="text-button" href="/admin">Chuyển sang Admin</a></div>
       </header>
 
+      <section class="lecture-catalog" aria-labelledby="lecture-catalog-title">
+        <div><p class="eyebrow">Role User · local test</p><h2 id="lecture-catalog-title">Chọn lecture để học</h2></div>
+        <div id="lecture-list" class="lecture-list" aria-live="polite"><p>Đang tải lectures…</p></div>
+      </section>
+
+      <section id="lesson-content" class="lesson-content" hidden>
       <section class="lesson-intro" aria-labelledby="lesson-title">
         <div>
           <h1 id="lesson-title">Đang tải bài học…</h1>
@@ -87,6 +93,7 @@
         </div>
       </section>
       <p id="privacy-note" class="privacy-note">Log chỉ gồm thao tác bàn phím, chuột, video và checkpoint trong phiên hiện tại; không ghi nội dung nguồn hoặc dữ liệu nhập tự do. Bundle demo cục bộ không tự gửi log đến máy chủ.</p>
+      </section>
     </main>
     <script type="module" src="./app.js"></script>
   </body>

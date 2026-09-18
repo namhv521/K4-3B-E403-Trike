@@ -47,7 +47,7 @@ Microsoft Office hoặc LibreOffice rồi lưu thành `.pptx` hoặc `.docx`.
 
 ```powershell
 $env:OPENROUTER_API_KEY="sk-or-v1-..."
-$env:OPENROUTER_TEXT_MODEL="openrouter/free"
+$env:OPENROUTER_TEXT_MODEL="inclusionai/ling-3.0-flash-fin:free"
 
 python agent.py `
   --input ".\input" `

@@ -254,7 +254,7 @@ export class LearningSession {
     this.feedbackAvailableAt = null;
     return {
       action,
-      time: action === "review" ? Math.max(0, checkpoint.time - 5) : Math.min(this.lesson.duration_seconds, checkpoint.time + 10),
+      time: action === "review" ? Math.max(0, checkpoint.time - 5) : checkpoint.time,
       event,
     };
   }

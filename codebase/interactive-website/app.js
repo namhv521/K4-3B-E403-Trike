@@ -3,8 +3,9 @@ import { LearningSession, validateLesson } from "./core.mjs";
 const bundleId = new URLSearchParams(location.search).get("bundle");
 const bundle = bundleId
   ? { lesson: `/api/bundles/${encodeURIComponent(bundleId)}/lesson.json`, sources: `/api/bundles/${encodeURIComponent(bundleId)}/sources.json`, video: `/api/bundles/${encodeURIComponent(bundleId)}/recap.mp4` }
-  : { lesson: "./assets/lesson.json", sources: "./assets/sources.json", video: "./assets/recap.mp4" };
+  : null;
 const telemetryKey = "vlearn-interactive-session-events";
+const selectedUserStorageKey = "vlearn-local-user-id";
 const $ = (selector) => document.querySelector(selector);
 let videoFrameHandle = null;
 let mediaVerified = false;
@@ -66,6 +67,35 @@ function eventMessage(event) {
     session_completed: `Hoàn thành video: ${event.score}/10 điểm`,
   };
   return labels[event.event] || event.event;
+}
+
+async function loadRoleAndLectures() {
+  const [lecturesResponse, usersResponse] = await Promise.all([fetch("/api/lectures", {cache: "no-store"}), fetch("/api/users", {cache: "no-store"})]);
+  if (!lecturesResponse.ok || !usersResponse.ok) throw new Error("Không thể tải dữ liệu local.");
+  const [lectures, users] = await Promise.all([lecturesResponse.json(), usersResponse.json()]);
+  const select = $("#user-select");
+  select.replaceChildren();
+  users.forEach((user) => select.append(new Option(user.name, user.id)));
+  const selectedId = users.some((user) => user.id === localStorage.getItem(selectedUserStorageKey)) ? localStorage.getItem(selectedUserStorageKey) : users[0]?.id;
+  select.value = selectedId;
+  localStorage.setItem(selectedUserStorageKey, selectedId || "");
+  select.addEventListener("change", () => {
+    localStorage.setItem(selectedUserStorageKey, select.value);
+    location.reload();
+  });
+  const list = $("#lecture-list");
+  list.replaceChildren();
+  lectures.forEach((lecture) => {
+    const item = document.createElement("article");
+    item.className = "lecture-card";
+    const heading = document.createElement("h3"); heading.textContent = lecture.title;
+    const detail = document.createElement("p"); detail.textContent = lecture.published ? `${lecture.lesson_title} · ${lecture.checkpoint_count} checkpoint` : "Chưa có video";
+    item.append(heading, detail);
+    if (lecture.published) {
+      const link = document.createElement("a"); link.className = "primary-button"; link.href = lecture.bundle_url; link.textContent = `Mở ${lecture.title}`; item.append(link);
+    }
+    list.append(item);
+  });
 }
 
 function initialise(lesson, sources) {
@@ -132,7 +162,7 @@ function initialise(lesson, sources) {
   };
   const sendEvent = (event) => {
     if (!bundleId) return;
-    const body = JSON.stringify({bundle_id: bundleId, ...event});
+    const body = JSON.stringify({bundle_id: bundleId, user_id: localStorage.getItem(selectedUserStorageKey), ...event});
     if (navigator.sendBeacon?.("/api/events", new Blob([body], {type: "application/json"}))) return;
     fetch("/api/events", {method: "POST", headers: {"Content-Type": "application/json"}, body, keepalive: true}).catch(() => {});
   };
@@ -165,7 +195,9 @@ function initialise(lesson, sources) {
   const openCheckpoint = (checkpoint) => {
     displayedCheckpoint = checkpoint;
     video.pause();
-    seekTo(checkpoint.time);
+    if (Math.abs(video.currentTime - checkpoint.time) > 0.3) {
+      seekTo(checkpoint.time);
+    }
     question.textContent = checkpoint.question;
     options.replaceChildren();
     checkpoint.options.forEach((option) => {
@@ -239,7 +271,9 @@ function initialise(lesson, sources) {
       return;
     }
     hideOverlay();
-    seekTo(result.time);
+    if (action === "review" || Math.abs(video.currentTime - result.time) > 0.3) {
+      seekTo(result.time);
+    }
     video.play().catch(() => setStatus("Chọn nút phát để tiếp tục video."));
     setStatus(action === "review" ? "Đang xem lại 5 giây trước checkpoint." : "Đang tiếp tục bài học.");
   };
@@ -275,7 +309,7 @@ function initialise(lesson, sources) {
   });
   video.addEventListener("seeking", () => {
     checkTiming();
-    if (programmaticSeekTarget !== null && Math.abs(video.currentTime - programmaticSeekTarget) < 0.25) {
+    if (programmaticSeekTarget !== null && Math.abs(video.currentTime - programmaticSeekTarget) < 0.5) {
       programmaticSeekTarget = null;
       return;
     }
@@ -373,11 +407,17 @@ function initialise(lesson, sources) {
 async function boot() {
   const status = $("#learning-status");
   try {
+    await loadRoleAndLectures();
+    if (!bundleId || !bundle) {
+      status.textContent = "Chọn một lecture có video để bắt đầu học.";
+      return;
+    }
     const [rawLesson, rawSources] = await Promise.all([getJson(bundle.lesson), getJson(bundle.sources)]);
     const refs = new Set((Array.isArray(rawSources) ? rawSources : []).map((item) => item.ref).filter(Boolean));
     const lesson = validateLesson(rawLesson, refs);
     const sources = new Map((Array.isArray(rawSources) ? rawSources : []).map((item) => [item.ref, item]));
     initialise(lesson, sources);
+    $("#lesson-content").hidden = false;
   } catch (error) {
     status.textContent = `Không thể mở bài học: ${error.message}`;
     console.error(error);

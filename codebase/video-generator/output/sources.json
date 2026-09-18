@@ -1,1 +1,17 @@
-[]
+[
+  {
+    "ref": "fixture-1",
+    "source": "Mock fixture",
+    "locator": "fixture reference 1"
+  },
+  {
+    "ref": "fixture-2",
+    "source": "Mock fixture",
+    "locator": "fixture reference 2"
+  },
+  {
+    "ref": "fixture-3",
+    "source": "Mock fixture",
+    "locator": "fixture reference 3"
+  }
+]

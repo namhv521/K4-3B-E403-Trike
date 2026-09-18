@@ -48,6 +48,16 @@ test("session pauses at due checkpoint and keeps incorrect learner in control", 
   assert.equal(session.score(), 0);
 });
 
+test("session continues from checkpoint time after feedback", () => {
+  let now = 1_000;
+  const session = new LearningSession(validateLesson(lesson()), { sessionId: "s2", now: () => now });
+  session.openDueCheckpoint(20.0);
+  session.submitAnswer("A");
+  const cont = session.resolveFeedback("continue");
+  assert.equal(cont.time, 20);
+  assert.equal(session.activeCheckpointId, null);
+});
+
 test("telemetry removes secrets and free-text fields", () => {
   const event = allowlistedEvent({
     session_id: "s1", timestamp: "2026-09-18T00:00:00Z", event: "video_seek",

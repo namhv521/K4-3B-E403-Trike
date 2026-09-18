@@ -1,6 +1,6 @@
 {
   "note": "Reference only; configure these values with environment variables.",
-  "text_model": "openrouter/free",
+  "text_model": "inclusionai/ling-3.0-flash-fin:free",
   "transcription_model": "openai/whisper-1",
   "tts": {
     "provider": "edge-tts",

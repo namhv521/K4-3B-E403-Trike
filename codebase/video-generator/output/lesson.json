@@ -5,30 +5,30 @@
   "narration": "Trí tuệ nhân tạo là lĩnh vực rộng, nơi máy thực hiện những công việc thường cần trí thông minh. Học máy là một cách xây dựng hệ thống trong lĩnh vực đó bằng cách học từ dữ liệu. AI tạo sinh tập trung vào việc tạo nội dung mới như văn bản, hình ảnh hoặc âm thanh. Mô hình ngôn ngữ lớn xử lý và tạo văn bản, nhưng ứng dụng trò chuyện chỉ là giao diện kết nối người dùng với một hay nhiều mô hình. Khi phân loại một công cụ, hãy nhìn vào dữ liệu đầu vào, cách xử lý và loại kết quả trả về.",
   "scenes": [
     {
-      "start": 0,
-      "end": 27,
+      "start": 0.0,
+      "end": 27.0,
       "title": "AI là chiếc ô lớn",
       "body": "Học máy là một cách làm bên trong lĩnh vực trí tuệ nhân tạo.",
       "source_refs": [
-        "data/studio-pack/c5-feedbackradar/video-mau/kich-ban-d1.md#2"
+        "fixture-1"
       ]
     },
     {
-      "start": 27,
-      "end": 54,
+      "start": 27.0,
+      "end": 54.0,
       "title": "Tạo sinh nói về kết quả",
       "body": "Văn bản, hình ảnh và âm thanh mới là sản phẩm của hệ thống tạo sinh.",
       "source_refs": [
-        "data/studio-pack/c5-feedbackradar/video-mau/kich-ban-d1.md#3"
+        "fixture-2"
       ]
     },
     {
-      "start": 54,
-      "end": 85,
+      "start": 54.0,
+      "end": 85.0,
       "title": "Phân biệt bằng nhiệm vụ",
       "body": "Hãy hỏi công cụ nhận gì, xử lý thế nào và trả về loại kết quả gì.",
       "source_refs": [
-        "data/studio-pack/c5-feedbackradar/video-mau/kich-ban-d1.md#4"
+        "fixture-3"
       ]
     }
   ],
@@ -40,7 +40,7 @@
       "question": "Phát biểu nào mô tả đúng quan hệ giữa AI và học máy?",
       "explanation": "AI là lĩnh vực rộng; học máy là một cách xây dựng hệ thống AI bằng việc học từ dữ liệu.",
       "source_refs": [
-        "data/studio-pack/c5-feedbackradar/video-mau/kich-ban-d1.md#2"
+        "fixture-1"
       ],
       "options": [
         {
@@ -85,7 +85,7 @@
       "question": "Đặc điểm chính của một tác vụ AI tạo sinh là gì?",
       "explanation": "Tác vụ tạo sinh tạo ra nội dung mới như văn bản, hình ảnh hoặc âm thanh.",
       "source_refs": [
-        "data/studio-pack/c5-feedbackradar/video-mau/kich-ban-d1.md#3"
+        "fixture-2"
       ],
       "options": [
         {
@@ -130,7 +130,7 @@
       "question": "Tên ứng dụng trò chuyện cho biết chắc điều gì?",
       "explanation": "Tên ứng dụng không đủ để biết mô hình phía sau; cần xem đầu vào, cách xử lý và đầu ra.",
       "source_refs": [
-        "data/studio-pack/c5-feedbackradar/video-mau/kich-ban-d1.md#4"
+        "fixture-3"
       ],
       "options": [
         {

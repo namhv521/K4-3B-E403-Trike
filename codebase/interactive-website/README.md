@@ -47,16 +47,20 @@ Chạy server sau để dùng cả hai màn hình:
 python server.py --port 8000
 ```
 
-- **Admin:** mở `http://127.0.0.1:8000/admin`, chọn folder học liệu, nhập yêu
-  cầu recap và tạo job. Khi job thành công, admin mở link learner của bundle và
-  xem dashboard ẩn danh: lượt xem, hoàn thành, xem quá nhanh, thời gian phản hồi
-  và hoàn thành trung bình, checkpoint sai nhiều, misconception lặp lại, tối đa
-  20 phiên gần đây và 20 event gần đây.
-- **User:** mở link `/learn/<bundle-id>` do admin tạo. Player giữ checkpoint,
-  dẫn giải nguồn, log trực tiếp và kết quả cuối video. Khi dùng bundle publish,
-  event allowlist được gửi về server local để dashboard aggregate.
+- **Admin:** mở `http://127.0.0.1:8000/admin`, chọn Lecture 1–4 làm đích,
+  chọn folder học liệu, nhập yêu cầu recap và tạo/cập nhật lecture đó. Khi job
+  thành công video chỉ được publish sau khi đủ ba artifact hợp lệ; bản video cũ
+  vẫn giữ được nếu generation thất bại. Dashboard theo lecture hiển thị users
+  local, lượt xem, hoàn thành, checkpoint sai nhiều và event gần đây. Admin có
+  nút tạo user test local.
+- **User:** mở `http://127.0.0.1:8000`, chọn user local và lecture. Lecture 1
+  được seed sẵn từ `assets` (video Bản đồ AI trong 85 giây hiện tại); Lecture
+  2–4 chờ Admin publish video. Player giữ checkpoint, dẫn giải nguồn, log trực
+  tiếp và kết quả cuối video. Event allowlist gắn user local được gửi đến cùng
+  telemetry store và xuất hiện ở Admin trong tối đa 5 giây.
 
-Role này chỉ mô phỏng luồng trên localhost; chưa có login hay quyền production.
+Role này chỉ mô phỏng luồng trên localhost; link chuyển User/Admin và user local
+không phải login hay quyền production.
 Prompt tạo video chỉ được lưu tạm trong job nội bộ để gọi generator và bị xóa khi
 job kết thúc; prompt không xuất hiện trong status API hay dashboard. Timeline chỉ
 project session ID ngẫu nhiên, timestamp, loại event, checkpoint và đúng/sai;

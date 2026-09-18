@@ -49,7 +49,7 @@ class OpenRouterClient:
         if not self.api_key:
             raise RuntimeError("OPENROUTER_API_KEY is not configured")
         self.transport = transport or _default_transport
-        self.text_model = text_model or os.getenv("OPENROUTER_TEXT_MODEL", "openrouter/free")
+        self.text_model = text_model or os.getenv("OPENROUTER_TEXT_MODEL", "inclusionai/ling-3.0-flash-fin:free")
         self.transcription_model = transcription_model or os.getenv("OPENROUTER_TRANSCRIPTION_MODEL", "openai/whisper-1")
 
     def _request(self, method, path, payload=None):
@@ -75,27 +75,31 @@ class OpenRouterClient:
 
     def chat_json(self, messages, schema_name):
         started = time.time()
-        response = self._request_json("POST", "/chat/completions", {
-            "model": self.text_model,
-            "messages": messages,
-            "response_format": {"type": "json_object"},
-            "temperature": 0.2,
-        })
-        content = response.get("choices", [{}])[0].get("message", {}).get("content", "")
-        match = re.search(r"\{.*\}", content, re.DOTALL)
-        if not match:
-            raise ValueError("Model did not return valid JSON")
-        try:
-            data = json.loads(match.group())
-        except json.JSONDecodeError as error:
-            raise ValueError("Model did not return valid JSON") from error
-        return data, {
-            "operation": "chat_json",
-            "schema": schema_name,
-            "model": response.get("model", self.text_model),
-            "duration_ms": round((time.time() - started) * 1000),
-            "usage": response.get("usage", {}),
-        }
+        for attempt in range(3):
+            response = self._request_json("POST", "/chat/completions", {
+                "model": self.text_model,
+                "messages": messages,
+                "response_format": {"type": "json_object"},
+                "temperature": 0.2,
+            })
+            content = response.get("choices", [{}])[0].get("message", {}).get("content") or ""
+            match = re.search(r"\{.*\}", content, re.DOTALL)
+            if match:
+                try:
+                    data = json.loads(match.group())
+                except json.JSONDecodeError:
+                    data = None
+                if data is not None:
+                    return data, {
+                        "operation": "chat_json",
+                        "schema": schema_name,
+                        "model": response.get("model", self.text_model),
+                        "duration_ms": round((time.time() - started) * 1000),
+                        "usage": response.get("usage", {}),
+                    }
+            if attempt < 2:
+                time.sleep(0.2)
+        raise ValueError("Model did not return valid JSON after 3 attempts")
 
     def transcribe(self, path: Path):
         path = Path(path)
