@@ -1,6 +1,9 @@
 import { LearningSession, validateLesson } from "./core.mjs";
 
-const bundle = { lesson: "./assets/lesson.json", sources: "./assets/sources.json", video: "./assets/recap.mp4" };
+const bundleId = new URLSearchParams(location.search).get("bundle");
+const bundle = bundleId
+  ? { lesson: `/api/bundles/${encodeURIComponent(bundleId)}/lesson.json`, sources: `/api/bundles/${encodeURIComponent(bundleId)}/sources.json`, video: `/api/bundles/${encodeURIComponent(bundleId)}/recap.mp4` }
+  : { lesson: "./assets/lesson.json", sources: "./assets/sources.json", video: "./assets/recap.mp4" };
 const telemetryKey = "vlearn-interactive-session-events";
 const $ = (selector) => document.querySelector(selector);
 let videoFrameHandle = null;
@@ -87,6 +90,7 @@ function initialise(lesson, sources) {
   let displayedCheckpoint = null;
   let feedbackTimer = null;
   let renderedEvents = 0;
+  let sentEvents = 0;
   let previousVideoTime = 0;
   let programmaticSeekTarget = null;
   let recentInputType = "mouse";
@@ -123,8 +127,15 @@ function initialise(lesson, sources) {
     logEmpty.hidden = session.events.length > 0;
     logCount.textContent = `${session.events.length} sự kiện`;
   };
+  const sendEvent = (event) => {
+    if (!bundleId) return;
+    const body = JSON.stringify({bundle_id: bundleId, ...event});
+    if (navigator.sendBeacon?.("/api/events", new Blob([body], {type: "application/json"}))) return;
+    fetch("/api/events", {method: "POST", headers: {"Content-Type": "application/json"}, body, keepalive: true}).catch(() => {});
+  };
   const log = () => {
     sessionStorage.setItem(telemetryKey, JSON.stringify(session.events));
+    while (sentEvents < session.events.length) sendEvent(session.events[sentEvents++]);
     renderEvents();
   };
   const record = (event, details = {}) => {
@@ -350,6 +361,7 @@ function initialise(lesson, sources) {
     sessionStorage.removeItem(telemetryKey);
     logList.replaceChildren();
     renderedEvents = 0;
+    sentEvents = 0;
     renderEvents();
     setStatus("Đã xóa log lưu trong tab này.");
   });

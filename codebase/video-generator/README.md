@@ -1,7 +1,9 @@
 # Video Generator Agent
 
 Agent nhận tài liệu bài giảng, tổng hợp kiến thức bằng OpenRouter, tạo câu hỏi
-checkpoint, sinh giọng đọc tiếng Việt bằng Edge TTS và dựng `recap.mp4`.
+checkpoint, sinh giọng đọc tiếng Việt bằng Edge TTS và dựng `recap.mp4` bằng
+Remotion. Pipeline Python vẫn là lớp validate/grounding; Remotion chỉ dựng
+visual từ `lesson.json` đã hợp lệ.
 
 ## 1. Chuẩn bị
 
@@ -14,6 +16,9 @@ python -m venv .venv
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 ffmpeg -version
+cd .\remotion-recap
+npm install
+cd ..
 ```
 
 ## 2. Thêm dữ liệu
@@ -50,6 +55,9 @@ python agent.py `
 
 Agent chia nguồn thành nhiều nhóm, tóm tắt từng nhóm rồi tổng hợp lần cuối để
 không bỏ qua các tài liệu nằm cuối folder.
+
+Nếu dùng admin local, không cần chạy lệnh này thủ công: mở
+`interactive-website/server.py` rồi vào `/admin` để chọn folder và tạo job.
 
 Audio và video đầu vào được chuyển thành văn bản qua OpenRouter transcription.
 Giọng đọc đầu ra dùng Edge TTS miễn phí. Có thể đổi giọng:

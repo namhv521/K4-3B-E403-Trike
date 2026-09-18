@@ -94,7 +94,13 @@ def generate(input_path, prompt, output_dir):
         staging = Path(folder)
         voice_path = staging / "narration.mp3"
         traces.append(generate_tts(lesson, client, voice_path))
-        render_video(lesson, voice_path, staging / "recap.mp4")
+        previous_renderer = os.environ.get("VLEARN_RENDERER")
+        os.environ.setdefault("VLEARN_RENDERER", "remotion")
+        try:
+            render_video(lesson, voice_path, staging / "recap.mp4")
+        finally:
+            if previous_renderer is None:
+                os.environ.pop("VLEARN_RENDERER", None)
         _write_json(staging / "lesson.json", lesson)
         _write_json(staging / "sources.json", source_catalog(records))
         _write_json(staging / "ai-trace.json", {"ai_called": True, "events": redact(traces)})

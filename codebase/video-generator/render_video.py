@@ -1,15 +1,30 @@
-"""Render simple concept cards into an MP4 using Pillow and FFmpeg."""
+"""Render grounded recap lessons through Remotion, with an FFmpeg fallback."""
 
+import json
+import os
 import shutil
 import subprocess
 import tempfile
 import textwrap
+import uuid
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
 
 WIDTH, HEIGHT = 1280, 720
+REMOTION_ROOT = Path(__file__).resolve().parent / "remotion-recap"
+
+
+def remotion_command(lesson, narration_path, output_path, public_narration_path=None):
+    """Build the generic Remotion command without putting lesson text in logs."""
+    output_path = Path(output_path)
+    props = {"lesson": lesson, "narrationPath": public_narration_path or (Path(narration_path).name if narration_path else None)}
+    cli = REMOTION_ROOT / "node_modules" / "@remotion" / "cli" / "remotion-cli.js"
+    return [
+        "node", str(cli), "render", "src/index.ts", "VLearnRecap", str(output_path),
+        "--props", json.dumps(props, ensure_ascii=False),
+    ]
 
 
 def _font(size, bold=False):
@@ -34,7 +49,7 @@ def _frame(scene, index, count, path):
     image.save(path)
 
 
-def render_video(lesson, narration_path, output_path):
+def _render_ffmpeg(lesson, narration_path, output_path):
     if shutil.which("ffmpeg") is None:
         raise RuntimeError("FFmpeg is required to render video")
     output_path = Path(output_path)
@@ -66,3 +81,33 @@ def render_video(lesson, narration_path, output_path):
         if result.returncode:
             raise RuntimeError(f"FFmpeg render failed: {result.stderr[-800:]}")
     return output_path
+
+
+def render_video(lesson, narration_path, output_path):
+    """Render with Remotion when requested; keep the tested FFmpeg fallback explicit."""
+    renderer = os.getenv("VLEARN_RENDERER", "ffmpeg").lower()
+    if renderer == "remotion":
+        if not (REMOTION_ROOT / "node_modules" / "@remotion" / "cli" / "remotion-cli.js").is_file() or shutil.which("node") is None:
+            raise RuntimeError("Remotion renderer is not installed; run npm install in video-generator/remotion-recap.")
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        public_audio = None
+        temporary_audio = None
+        if narration_path:
+            public_root = REMOTION_ROOT / "public" / "runtime"
+            public_root.mkdir(parents=True, exist_ok=True)
+            temporary_audio = public_root / f"narration-{uuid.uuid4().hex}.mp3"
+            shutil.copy2(narration_path, temporary_audio)
+            public_audio = f"runtime/{temporary_audio.name}"
+        command = remotion_command(lesson, narration_path, output_path, public_audio)
+        try:
+            result = subprocess.run(command, cwd=REMOTION_ROOT, capture_output=True, text=True)
+        finally:
+            if temporary_audio:
+                temporary_audio.unlink(missing_ok=True)
+        if result.returncode or not output_path.is_file() or output_path.stat().st_size == 0:
+            raise RuntimeError(f"Remotion render failed: {result.stderr[-800:]}")
+        return output_path
+    if renderer != "ffmpeg":
+        raise RuntimeError("VLEARN_RENDERER must be remotion or ffmpeg.")
+    return _render_ffmpeg(lesson, narration_path, output_path)

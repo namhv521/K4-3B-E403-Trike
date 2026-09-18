@@ -14,7 +14,7 @@ và chủ động chọn tiếp tục, xem lại hoặc sửa câu trả lời.
 | --- | --- | --- |
 | [`agent.md`](./agent.md) | Quy tắc bắt buộc cho coding agent: scope, grounding, privacy, logging, test và an toàn `.exe`. | Đọc trước khi sửa hoặc mở rộng code. |
 | [`video-generator/`](./video-generator/) | Pipeline Python nhận học liệu, tạo lesson manifest, narration và `recap.mp4`. | Khi cần tạo/cập nhật nội dung bài học. |
-| [`interactive-website/`](./interactive-website/) | Website tĩnh HTML/CSS/JavaScript để phát video và checkpoint trong trình duyệt. | Đây là điểm tích hợp hướng tới website VLearn. |
+| [`interactive-website/`](./interactive-website/) | Local web prototype: role admin tạo bundle Remotion/xem analytics ẩn danh; role user phát video/checkpoint. | Đây là điểm tích hợp hướng tới website VLearn. |
 | [`interactive-video-player/`](./interactive-video-player/) | Player desktop Python/Pygame tùy chọn cho demo/offline. | Chỉ dùng khi cần chạy Windows desktop/fullscreen. |
 
 Mỗi module có README riêng với hướng dẫn chi tiết. README này chỉ mô tả cách
@@ -239,9 +239,10 @@ Sau khi thay bundle, smoke test thủ công tối thiểu gồm:
 - Chỉ dùng học liệu đã được cấp quyền hoặc fixture.
 - Không bịa câu trả lời, explanation, citation hoặc timecode.
 - Không đưa API key, token, toàn bộ học liệu hoặc câu trả lời tự do vào log.
-- Website hiện là static prototype: chưa có login, backend telemetry hay quyền
-  truy cập VLearn. Khi tích hợp thật, host VLearn phải chịu trách nhiệm về auth,
-  authorization, HTTPS, CSRF/CORS và API logging đã được phê duyệt.
+- Website hiện là local prototype: có API job/telemetry localhost để demo
+  admin/user nhưng chưa có login hoặc quyền truy cập VLearn. Khi tích hợp thật,
+  host VLearn phải chịu trách nhiệm về auth, authorization, HTTPS, CSRF/CORS,
+  consent/retention và API logging đã được phê duyệt.
 - Không tự mở rộng thành leaderboard, điểm chính thức, hồ sơ học viên dài hạn
   hoặc tutor chat tự do.
 - Không ngụy trang hay phân phối `.exe` qua video/website.

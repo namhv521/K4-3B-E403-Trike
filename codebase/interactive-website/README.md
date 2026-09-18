@@ -38,6 +38,39 @@ trang sẽ ghi rõ đây là mock; thay bằng bundle sinh từ học liệu tr�
 node --test tests/test_core.mjs
 ```
 
+## Hai role local prototype
+
+Chạy server sau để dùng cả hai màn hình:
+
+```powershell
+python server.py --port 8000
+```
+
+- **Admin:** mở `http://127.0.0.1:8000/admin`, chọn folder học liệu, nhập yêu
+  cầu recap và tạo job. Khi job thành công, admin mở link learner của bundle và
+  xem dashboard ẩn danh: lượt xem, hoàn thành, xem quá nhanh, checkpoint sai
+  nhiều và misconception lặp lại.
+- **User:** mở link `/learn/<bundle-id>` do admin tạo. Player giữ checkpoint,
+  dẫn giải nguồn, log trực tiếp và kết quả cuối video. Khi dùng bundle publish,
+  event allowlist được gửi về server local để dashboard aggregate.
+
+Role này chỉ mô phỏng luồng trên localhost; chưa có login hay quyền production.
+
+## Remotion renderer
+
+Agent giữ Python/OpenRouter làm lớp tổng hợp và grounding, Edge TTS làm giọng
+đọc, sau đó render visual bằng Remotion `Series`/subtitle trong
+`../video-generator/remotion-recap`. Cài một lần trước khi tạo job:
+
+```powershell
+cd ..\video-generator\remotion-recap
+npm install
+cd ..\..\interactive-website
+```
+
+Job admin đặt `VLEARN_RENDERER=remotion`. Cách render concept-card FFmpeg cũ
+chỉ còn fallback rõ ràng cho test/khôi phục local (`VLEARN_RENDERER=ffmpeg`).
+
 Khi tích hợp vào VLearn thật, giữ `core.mjs` làm state/validation contract; host
-chịu trách nhiệm xác thực, authorization, HTTPS, CSRF/CORS và telemetry API đã
-được phê duyệt. Không nhúng hoặc tải `interactive-recap.exe` qua website.
+chịu trách nhiệm xác thực, authorization, HTTPS, CSRF/CORS, consent và retention
+telemetry đã được phê duyệt. Không nhúng hoặc tải `interactive-recap.exe` qua website.

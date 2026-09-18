@@ -1,0 +1,14 @@
+{
+  "name": "vlearn-remotion-recap",
+  "private": true,
+  "scripts": {"studio": "remotion studio", "render": "remotion render VLearnRecap"},
+  "dependencies": {
+    "@remotion/cli": "4.0.407",
+    "@remotion/zod-types": "4.0.407",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "remotion": "4.0.407",
+    "zod": "3.22.3"
+  },
+  "devDependencies": {"@types/node": "22.10.5", "@types/react": "19.2.7", "typescript": "5.9.3"}
+}
