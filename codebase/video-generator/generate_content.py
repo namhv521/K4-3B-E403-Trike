@@ -1,6 +1,8 @@
 """Generate the structured recap lesson from traceable source records."""
 
 import json
+from hashlib import sha256
+from pathlib import Path
 
 from lesson_schema import validate_lesson
 
@@ -9,6 +11,7 @@ SYSTEM_PROMPT = """Bạn là agent biên tập video ôn tập. Chỉ dùng SOUR
 Trả về duy nhất JSON gồm version, title, duration_seconds, narration, scenes và checkpoints.
 Ưu tiên độ bao phủ: chọn các khái niệm quan trọng từ mọi nhóm nguồn, không chỉ nguồn đầu tiên.
 Lời đọc khoảng 180-230 từ tiếng Việt, chia tối thiểu 4 cảnh và có 3 checkpoint.
+Mỗi cảnh và checkpoint phải có source_refs không rỗng, chỉ dùng mã trong ALLOWED_SOURCE_REFS.
 Mỗi checkpoint có id, time, concept, question, explanation, source_refs và đúng 4 options A-D.
 Mỗi option có id, text, is_correct; option sai phải có misconception {id,label}, option đúng có misconception null.
 Có đúng một đáp án đúng. Các checkpoint cách nhau trên 10 giây. Nội dung mục tiêu dài 60-90 giây."""
@@ -19,6 +22,46 @@ Giữ đủ các khái niệm, quan hệ, ví dụ và điểm dễ nhầm. Khô
 
 def _json_size(value):
     return len(json.dumps(value, ensure_ascii=False))
+
+
+def source_catalog(records):
+    """Return stable, text-free citations safe to publish with a lesson bundle."""
+    catalog = []
+    seen = set()
+    for record in records:
+        source = str(record.get("source", ""))
+        locator = str(record.get("locator", ""))
+        if not source or not locator:
+            raise ValueError("Each source record requires source and locator")
+        ref = "src-" + sha256(f"{source}\0{locator}".encode("utf-8")).hexdigest()[:12]
+        if ref not in seen:
+            catalog.append({"ref": ref, "source": Path(source).name, "locator": locator})
+            seen.add(ref)
+    if not catalog:
+        raise ValueError("At least one source record is required")
+    return catalog
+
+
+def _attach_source_refs(records, catalog):
+    refs_by_location = {
+        (str(item["source"]), str(item["locator"])): item["ref"]
+        for item in catalog
+    }
+    enriched = []
+    for record in records:
+        ref = refs_by_location.get((str(record.get("source", "")), str(record.get("locator", ""))))
+        if ref is None:
+            raise ValueError("Every source record must map to a published source reference")
+        enriched.append({**record, "source_ref": ref})
+    return enriched
+
+
+def _digest_records(records):
+    """Keep model input compact while retaining the published citation identifier."""
+    return [
+        {"text": record["text"], "source_ref": record["source_ref"]}
+        for record in records
+    ]
 
 
 def _split_record(record, limit):
@@ -74,6 +117,8 @@ def _digest_batch(batch, client):
 
 def generate_lesson(records, prompt, client, batch_chars=12000, digest_chars=12000):
     digests, traces = [], []
+    catalog = source_catalog(records)
+    records = _digest_records(_attach_source_refs(records, catalog))
     for batch in _batch_records(records, batch_chars):
         digest, trace = _digest_batch(batch, client)
         digests.append(digest)
@@ -90,9 +135,13 @@ def generate_lesson(records, prompt, client, batch_chars=12000, digest_chars=120
     else:
         raise ValueError("Source digests could not be reduced to the final context budget")
     payload = json.dumps(digests, ensure_ascii=False)
+    allowed_source_refs = [item["ref"] for item in catalog]
     lesson, trace = client.chat_json([
         {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": f"Yêu cầu: {prompt}\nSOURCE_DIGESTS:\n{payload}"},
+        {"role": "user", "content": (
+            f"Yêu cầu: {prompt}\nALLOWED_SOURCE_REFS:\n"
+            f"{json.dumps(allowed_source_refs, ensure_ascii=False)}\nSOURCE_DIGESTS:\n{payload}"
+        )},
     ], "interactive_lesson_v2")
     traces.append(trace)
-    return validate_lesson(lesson), traces
+    return validate_lesson(lesson, allowed_source_refs=allowed_source_refs), traces

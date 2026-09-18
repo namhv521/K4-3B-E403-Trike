@@ -60,7 +60,7 @@ def render_video(lesson, narration_path, output_path):
         command += [
             "-t", str(duration), "-vf", "tpad=stop_mode=clone:stop_duration=10", "-r", "24", "-c:v", "libx264", "-preset", "ultrafast",
             "-tune", "stillimage", "-crf", "28", "-pix_fmt", "yuv420p", "-c:a", "aac",
-            "-shortest", str(output_path)
+            str(output_path)
         ]
         result = subprocess.run(command, capture_output=True, text=True)
         if result.returncode:

@@ -7,7 +7,7 @@ import tempfile
 from pathlib import Path
 
 from extract_sources import extract_path
-from generate_content import generate_lesson
+from generate_content import generate_lesson, source_catalog
 from generate_images import generate_images
 from generate_tts import generate_tts
 from lesson_schema import validate_lesson
@@ -33,14 +33,32 @@ def require_lesson_sources(records):
     return content
 
 
+def fixture_source_catalog(lesson):
+    """Replace fixture references with non-sensitive, explicitly mock citations."""
+    raw_refs = []
+    for item in [*lesson["scenes"], *lesson["checkpoints"]]:
+        raw_refs.extend(item["source_refs"])
+    mapping = {
+        raw_ref: f"fixture-{index + 1}"
+        for index, raw_ref in enumerate(dict.fromkeys(raw_refs))
+    }
+    for item in [*lesson["scenes"], *lesson["checkpoints"]]:
+        item["source_refs"] = [mapping[raw_ref] for raw_ref in item["source_refs"]]
+    return [
+        {"ref": ref, "source": "Mock fixture", "locator": f"fixture reference {index + 1}"}
+        for index, ref in enumerate(mapping.values())
+    ]
+
+
 def publish_fixture(fixture_path, output_dir, renderer=render_video, tts_generator=generate_tts):
     lesson = validate_lesson(json.loads(Path(fixture_path).read_text(encoding="utf-8")))
+    sources = fixture_source_catalog(lesson)
     lesson["generation"] = {"mode": "mock", "notice": "Fixture content; OpenRouter was not called."}
     output_dir = Path(output_dir)
     with tempfile.TemporaryDirectory(dir=output_dir.parent if output_dir.parent.exists() else None) as folder:
         staging = Path(folder)
         _write_json(staging / "lesson.json", lesson)
-        _write_json(staging / "sources.json", [])
+        _write_json(staging / "sources.json", sources)
         voice_path = staging / "narration.mp3"
         tts_trace = tts_generator(lesson, None, voice_path)
         _write_json(staging / "ai-trace.json", {"ai_called": False, "mode": "mock", "tts": tts_trace})
@@ -78,7 +96,7 @@ def generate(input_path, prompt, output_dir):
         traces.append(generate_tts(lesson, client, voice_path))
         render_video(lesson, voice_path, staging / "recap.mp4")
         _write_json(staging / "lesson.json", lesson)
-        _write_json(staging / "sources.json", records)
+        _write_json(staging / "sources.json", source_catalog(records))
         _write_json(staging / "ai-trace.json", {"ai_called": True, "events": redact(traces)})
         (staging / "transcript.txt").write_text(lesson["narration"], encoding="utf-8")
         _publish(staging, output_dir)

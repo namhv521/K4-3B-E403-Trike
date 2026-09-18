@@ -1,10 +1,12 @@
+import json
+import re
 import sys
 import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from generate_content import generate_lesson
+from generate_content import generate_lesson, source_catalog
 from test_lesson_schema import lesson
 
 
@@ -17,7 +19,13 @@ class FakeClient:
         self.calls.append((messages, schema))
         if schema == "source_digest_v1":
             return {"facts": [self.digest_text], "source_refs": ["source"]}, {"schema": schema}
-        return lesson(), {"schema": schema}
+        result = lesson()
+        refs = json.loads(re.search(r"ALLOWED_SOURCE_REFS:\n(\[.*?\])\nSOURCE_DIGESTS", messages[1]["content"], re.DOTALL).group(1))
+        for scene in result["scenes"]:
+            scene["source_refs"] = [refs[0]]
+        for checkpoint in result["checkpoints"]:
+            checkpoint["source_refs"] = [refs[0]]
+        return result, {"schema": schema}
 
 
 class ContentTests(unittest.TestCase):
@@ -52,7 +60,27 @@ class ContentTests(unittest.TestCase):
         ]
         self.assertGreater(len(digest_payloads), 1)
         self.assertTrue(all(len(payload) <= 500 for payload in digest_payloads))
-        self.assertTrue(any("audio:full:chunk:" in payload for payload in digest_payloads))
+        self.assertTrue(any("source_ref" in payload for payload in digest_payloads))
+
+    def test_catalog_is_text_free_and_stable(self):
+        records = [{"text": "Nội dung riêng tư", "source": r"C:\secret\lesson.md", "locator": "line:2"}]
+        catalog = source_catalog(records)
+        self.assertEqual("lesson.md", catalog[0]["source"])
+        self.assertNotIn("text", catalog[0])
+        self.assertTrue(catalog[0]["ref"].startswith("src-"))
+
+    def test_rejects_lesson_citation_that_is_not_in_source_catalog(self):
+        class UngroundedClient(FakeClient):
+            def chat_json(self, messages, schema):
+                value, trace = super().chat_json(messages, schema)
+                if schema == "interactive_lesson_v2":
+                    value["checkpoints"][0]["source_refs"] = ["src-invented"]
+                return value, trace
+
+        client = UngroundedClient()
+        records = [{"text": "AI là lĩnh vực rộng.", "source": "lesson.md", "locator": "line:1"}]
+        with self.assertRaisesRegex(ValueError, "unsupported source references"):
+            generate_lesson(records, "Tổng hợp", client)
 
 
 if __name__ == "__main__":

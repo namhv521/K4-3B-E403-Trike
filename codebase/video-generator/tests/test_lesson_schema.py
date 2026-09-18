@@ -66,6 +66,25 @@ class LessonSchemaTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "10 seconds"):
             validate_lesson(data)
 
+    def test_rejects_checkpoint_without_grounded_source_reference(self):
+        data = lesson()
+        data["checkpoints"][0]["source_refs"] = []
+        with self.assertRaisesRegex(ValueError, "source_refs"):
+            validate_lesson(data)
+
+    def test_rejects_scene_timeline_gap(self):
+        data = lesson()
+        data["scenes"] = [
+            {"start": 0, "end": 20, "title": "A", "body": "A", "source_refs": ["slide:1"]},
+            {"start": 21, "end": 70, "title": "B", "body": "B", "source_refs": ["slide:2"]},
+        ]
+        with self.assertRaisesRegex(ValueError, "continuous timeline"):
+            validate_lesson(data)
+
+    def test_rejects_citation_outside_allowed_catalog(self):
+        with self.assertRaisesRegex(ValueError, "unsupported source references"):
+            validate_lesson(lesson(), allowed_source_refs={"src-allowed"})
+
     def test_first_attempt_score(self):
         self.assertEqual(10.0, checkpoint_score(3, 3))
         self.assertEqual(6.7, checkpoint_score(2, 3))

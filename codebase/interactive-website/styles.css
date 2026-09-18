@@ -1,0 +1,51 @@
+:root {
+  color-scheme: dark;
+  --ink: #08131f;
+  --slate: #10263a;
+  --paper: #f5f0e6;
+  --mist: #bfccd7;
+  --signal: #7fe2c5;
+  --signal-deep: #143e3b;
+  --review: #ffb86b;
+  --line: rgba(191, 204, 215, 0.25);
+  font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; min-width: 320px; background: var(--ink); color: var(--paper); }
+button, video { font: inherit; }
+button { cursor: pointer; }
+button:focus-visible, a:focus-visible { outline: 3px solid var(--signal); outline-offset: 3px; }
+.lesson-shell { width: min(1120px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 52px; }
+.lesson-header { display: flex; align-items: center; justify-content: space-between; gap: 24px; border-bottom: 1px solid var(--line); padding-bottom: 20px; }
+.wordmark { color: var(--paper); font-size: 1.2rem; font-weight: 750; letter-spacing: -0.04em; text-decoration: none; }
+.wordmark span { color: var(--signal); font-weight: 450; }
+.lesson-header p, .privacy-note { color: var(--mist); font-size: 0.9rem; margin: 0; }
+.lesson-intro { display: flex; justify-content: space-between; align-items: end; gap: 24px; padding: 55px 0 25px; }
+.generation-notice { border-left: 3px solid var(--review); color: var(--review); font-size: 0.88rem; line-height: 1.4; margin: 19px 0 0; padding-left: 10px; }
+h1, h2, p { max-width: 72ch; }
+h1 { font-size: clamp(2rem, 5vw, 4.6rem); letter-spacing: -0.06em; line-height: 0.95; margin: 0; }
+.duration { color: var(--mist); margin: 0 0 5px; white-space: nowrap; }
+.player-stage { aspect-ratio: 16 / 9; background: #03080d; position: relative; overflow: hidden; box-shadow: 0 22px 70px rgba(0, 0, 0, 0.35); }
+#lesson-video { width: 100%; height: 100%; display: block; object-fit: contain; }
+.checkpoint-overlay { inset: 0; position: absolute; display: grid; place-items: center; padding: 20px; background: rgba(4, 13, 22, 0.72); }
+.checkpoint-card { width: min(720px, 100%); background: var(--paper); color: var(--ink); padding: clamp(22px, 4vw, 44px); box-shadow: 0 16px 42px rgba(0, 0, 0, 0.35); }
+.checkpoint-label { color: #376e68; margin: 0 0 12px; font-size: 0.88rem; font-weight: 700; }
+h2 { font-size: clamp(1.25rem, 3vw, 2rem); letter-spacing: -0.035em; line-height: 1.15; margin: 0 0 24px; }
+.answer-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.answer-option { display: flex; align-items: baseline; gap: 10px; min-height: 66px; text-align: left; border: 1px solid #aeb9bd; background: transparent; color: var(--ink); padding: 13px; }
+.answer-option:hover:not(:disabled) { border-color: var(--signal-deep); background: #e4f3ee; }
+.answer-option span { color: #376e68; font-weight: 800; }
+.answer-option strong { font-weight: 600; }
+.checkpoint-tools, .feedback-actions, .log-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.checkpoint-tools { margin-top: 17px; }
+.text-button { background: none; border: 0; color: inherit; min-height: 44px; padding: 10px 4px; text-decoration: underline; text-underline-offset: 4px; }
+.checkpoint-card .text-button { color: #245d58; }
+.source-panel { border-top: 1px solid #bdc7c5; margin-top: 18px; padding-top: 12px; color: #34454d; font-size: 0.9rem; }
+.source-panel p { font-weight: 700; margin: 0 0 5px; }.source-panel ul { margin: 0; padding-left: 20px; }
+.feedback { border-top: 1px solid #bdc7c5; margin-top: 22px; padding-top: 18px; }.feedback p { line-height: 1.5; margin: 0 0 15px; }.feedback[data-kind="incorrect"] p { color: #934308; }.feedback[data-kind="uncertain"] p { color: #705312; }
+.primary-button, .secondary-button { border: 1px solid var(--ink); padding: 11px 15px; }.primary-button { background: var(--ink); color: var(--paper); }.secondary-button { background: transparent; color: var(--ink); }
+.learning-notes { align-items: center; border-bottom: 1px solid var(--line); display: flex; gap: 24px; justify-content: space-between; padding: 17px 0; }.learning-notes p { color: var(--mist); margin: 0; }.log-actions .text-button { color: var(--mist); font-size: 0.86rem; }.privacy-note { line-height: 1.5; margin: 16px 0 0; }
+@media (max-width: 650px) { .lesson-shell { width: min(100% - 24px, 1120px); padding-top: 18px; }.lesson-header, .lesson-intro, .learning-notes { align-items: flex-start; flex-direction: column; gap: 12px; }.lesson-intro { padding-top: 35px; }.answer-options { grid-template-columns: 1fr; }.checkpoint-overlay { padding: 10px; }.checkpoint-card { padding: 22px; }.player-stage { aspect-ratio: auto; min-height: 510px; }.learning-notes { padding: 16px 0; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; } }

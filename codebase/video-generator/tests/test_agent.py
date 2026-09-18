@@ -50,6 +50,9 @@ class AgentTests(unittest.TestCase):
             trace = json.loads((root / "out" / "ai-trace.json").read_text(encoding="utf-8"))
             self.assertEqual("mock", manifest["generation"]["mode"])
             self.assertFalse(trace["ai_called"])
+            sources = json.loads((root / "out" / "sources.json").read_text(encoding="utf-8"))
+            self.assertEqual("Mock fixture", sources[0]["source"])
+            self.assertEqual("fixture-1", manifest["scenes"][0]["source_refs"][0])
             self.assertEqual(b"video", (root / "out" / "recap.mp4").read_bytes())
 
     def test_fixture_passes_generated_voice_to_renderer(self):

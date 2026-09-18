@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Video ôn tập tương tác VLearn với checkpoint có căn cứ từ học liệu.">
+    <title>VLearn Interactive</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="lesson-shell">
+      <header class="lesson-header">
+        <a class="wordmark" href="#player" aria-label="VLearn Interactive">VLearn <span>interactive</span></a>
+        <p>Ôn tập có checkpoint · không phải bài chấm điểm</p>
+      </header>
+
+      <section class="lesson-intro" aria-labelledby="lesson-title">
+        <div>
+          <h1 id="lesson-title">Đang tải bài học…</h1>
+          <p id="generation-notice" class="generation-notice" hidden></p>
+        </div>
+        <p class="duration"><span aria-hidden="true">◷</span> <span id="duration">—</span></p>
+      </section>
+
+      <section class="player-stage" id="player" aria-label="Trình phát video học tập tương tác">
+        <video id="lesson-video" controls playsinline preload="metadata">
+          Trình duyệt của bạn không hỗ trợ phát video HTML5.
+        </video>
+        <section id="checkpoint-overlay" class="checkpoint-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="checkpoint-question">
+          <div class="checkpoint-card">
+            <p class="checkpoint-label">Dừng lại để tự kiểm tra</p>
+            <h2 id="checkpoint-question"></h2>
+            <div id="answer-options" class="answer-options" aria-label="Chọn một phương án A đến D"></div>
+            <div class="checkpoint-tools">
+              <button id="hint-button" class="text-button" type="button">Chưa chắc, cho mình gợi ý</button>
+              <button id="source-button" class="text-button" type="button" aria-expanded="false">Xem nguồn</button>
+            </div>
+            <aside id="source-panel" class="source-panel" hidden>
+              <p>Nguồn của checkpoint</p>
+              <ul id="source-list"></ul>
+            </aside>
+            <div id="feedback" class="feedback" hidden aria-live="polite">
+              <p id="feedback-text"></p>
+              <div class="feedback-actions">
+                <button id="review-button" class="secondary-button" type="button">Xem lại 5 giây</button>
+                <button id="edit-button" class="secondary-button" type="button">Sửa câu trả lời</button>
+                <button id="continue-button" class="primary-button" type="button">Tiếp tục</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="learning-notes" aria-label="Trạng thái và quyền riêng tư">
+        <p id="learning-status" role="status" aria-live="polite">Đang tải bundle bài học…</p>
+        <div class="log-actions">
+          <button id="export-log" class="text-button" type="button">Tải log phiên này</button>
+          <button id="clear-log" class="text-button" type="button">Xóa log trong tab</button>
+        </div>
+      </section>
+      <p class="privacy-note">Log chỉ gồm thao tác checkpoint trong phiên hiện tại và chỉ được tải xuống khi bạn chọn “Tải log”. Trang này không tự gửi log đến máy chủ.</p>
+    </main>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

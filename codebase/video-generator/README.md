@@ -79,7 +79,7 @@ Folder `output` gồm:
 - `narration.mp3`: audio TTS riêng.
 - `lesson.json`: cảnh, checkpoint, câu hỏi, đáp án và misconception.
 - `transcript.txt`: toàn bộ lời đọc.
-- `sources.json`: dữ liệu nguồn đã trích xuất.
+- `sources.json`: catalog citation tối thiểu (`ref`, tên file, vị trí), không chứa text học liệu đã trích xuất.
 - `ai-trace.json`: model, bước gọi AI và usage trả về.
 
 Để đưa kết quả vào website:
@@ -87,6 +87,7 @@ Folder `output` gồm:
 ```powershell
 Copy-Item .\output\recap.mp4 ..\interactive-website\assets\recap.mp4 -Force
 Copy-Item .\output\lesson.json ..\interactive-website\assets\lesson.json -Force
+Copy-Item .\output\sources.json ..\interactive-website\assets\sources.json -Force
 cd ..\interactive-website
 python server.py
 ```

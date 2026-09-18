@@ -34,7 +34,7 @@ class BundleTests(unittest.TestCase):
     def test_rejects_incomplete_checkpoint_before_gui_startup(self):
         invalid = {
             "title": "Recap", "narration": "Nội dung", "duration_seconds": 60,
-            "scenes": [{"start": 0, "end": 60}], "checkpoints": [{"id": "cp1"}],
+            "scenes": [{"start": 0, "end": 60, "title": "Khung", "body": "Nội dung", "source_refs": ["fixture:1"]}], "checkpoints": [{"id": "cp1"}],
         }
         with self.assertRaisesRegex(ValueError, "time"):
             validate_lesson(invalid)
@@ -50,10 +50,10 @@ class BundleTests(unittest.TestCase):
             ]
             lesson = {
                 "title": "Recap", "narration": "Nội dung", "duration_seconds": 60,
-                "scenes": [{"start": 0, "end": 60}],
+                "scenes": [{"start": 0, "end": 60, "title": "Khung", "body": "Nội dung", "source_refs": ["fixture:1"]}],
                 "checkpoints": [{
                     "id": "cp1", "time": 20, "concept": "AI", "question": "AI là gì?",
-                    "explanation": "AI là lĩnh vực rộng.", "options": options,
+                    "explanation": "AI là lĩnh vực rộng.", "source_refs": ["fixture:1"], "options": options,
                 }],
             }
             (root / "lesson.json").write_text(json.dumps(lesson), encoding="utf-8")
